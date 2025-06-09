@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'package:flutter/gestures.dart';
 
 void main() => runApp(KisanConnectApp());
 
@@ -62,98 +66,117 @@ class HomePage extends StatelessWidget {
     final bgColor = isDark ? Colors.black : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black;
     final subTextColor = isDark ? Colors.white70 : Colors.black54;
+    String User = "defualt";
+    String PresentUser = "defualt";
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: bgColor,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(70),
-        child: AppBar(
-          backgroundColor: Colors.grey[800],
-          title: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset('assets/logo.png.jpg', width: 50),
-              ).animate().fadeIn(duration: 600.ms).scale(),
-              SizedBox(width: 10),
-              Text(
-                'Kisan Connect',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ).animate().fadeIn(duration: 600.ms).moveX(begin: 30),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.more_vert, size: 28),
-              onPressed: () {
-                _scaffoldKey.currentState?.openEndDrawer();
-              },
-              tooltip: 'Menu',
-            ),
-          ],
-        ),
-      ),
-      endDrawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.grey[800]),
+      drawer: Builder(
+        builder: (context) {
+          final screenWidth = MediaQuery.of(context).size.width;
+
+          return SizedBox(
+            width: screenWidth * 0.64, // 80% of screen width
+            child: Drawer(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.account_circle, size: 60, color: Colors.white),
-                  SizedBox(height: 10),
-                  Text('Welcome!',
-                      style: TextStyle(fontSize: 20, color: Colors.white)),
-                  Text('Explore Agriculture',
-                      style: TextStyle(color: Colors.white70)),
+                  UserAccountsDrawerHeader(
+                    accountName: Text(PresentUser),
+                    accountEmail: (PresentUser == User)
+                        ? Text("Administrator")
+                        : Text("Student"),
+                    currentAccountPicture: const CircleAvatar(
+                      backgroundImage: AssetImage('assets/imgicon1.png'),
+                    ),
+                    decoration: BoxDecoration(
+                      color: ('defualt' == User)
+                          ? Colors.blue
+                          : Colors.orangeAccent,
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.person),
+                    title: const Text("Profile"),
+                    onTap: () {
+                      print("Profile tapped");
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.help),
+                    title: const Text("Help"),
+                    onTap: () {
+                      print("Help tapped");
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.contact_emergency),
+                    title: const Text("Raise Query"),
+                    onTap: () {
+                      print("Query tapped");
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.settings),
+                    title: const Text("Settings"),
+                    onTap: () {
+                      print("Settings tapped");
+                      Navigator.pop(context);
+                    },
+                  ),
                 ],
               ),
             ),
-            ListTile(
-              leading: Icon(Icons.login),
-              title: Text('Login'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FarmerDashboard()),
-                );
-
-                // TODO: Handle login tap
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.person_add),
-              title: Text('Sign In'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => BuyerDashboardPage()),
-                );
-                // TODO: Handle sign in tap
-              },
-            ),
-            Divider(),
-            ListTile(
-              leading: Icon(Icons.home),
-              title: Text('Home'),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-              },
-            ),
+          );
+        },
+      ),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            SizedBox(width: 30),
+            const Text('Kissan Connect'),
           ],
         ),
+        backgroundColor: const Color.fromARGB(255, 10, 133, 82),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {
+              showMenu<int>(
+                context: context,
+                position: const RelativeRect.fromLTRB(100, 80, 0, 0),
+                items: const [
+                  PopupMenuItem(value: 1, child: Text("Log-in")),
+                  PopupMenuItem(value: 2, child: Text("Log-out")),
+                  PopupMenuItem(value: 3, child: Text("Help")),
+                ],
+              ).then((value) {
+                if (value == 1) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                  );
+                } else if (value == 2) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Logout succesfully ....")));
+                } else if (value == 3) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Help selected....")),
+                  );
+                }
+              });
+            },
+          ),
+        ],
       ),
       body: ListView(
         children: [
           // 🔍 Search Bar
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(8.0),
             child: SizedBox(
               height: 45,
               child: TextField(
@@ -164,9 +187,9 @@ class HomePage extends StatelessWidget {
                       TextStyle(color: Colors.black54), // hint text color
                   prefixIcon: Icon(Icons.search, color: Colors.black),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 10),
+                  contentPadding: EdgeInsets.symmetric(vertical: 13),
                   filled: true,
                   fillColor: Colors.grey[200],
                 ),
@@ -175,43 +198,78 @@ class HomePage extends StatelessWidget {
           ),
 
           // 📸 Carousel
-          CarouselSlider(
-            items: carouselItems.map((item) {
+          CarouselSlider.builder(
+            itemCount: carouselItems.length,
+            itemBuilder: (context, index, realIdx) {
+              final item = carouselItems[index];
               return Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset(item['image']!, fit: BoxFit.cover),
-                  Container(color: Colors.black45),
+                  ShaderMask(
+                    shaderCallback: (rect) => LinearGradient(
+                      colors: [Colors.black54, Colors.black26],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ).createShader(rect),
+                    blendMode: BlendMode.darken,
+                    child: Image.asset(
+                      item['image']!,
+                      fit: BoxFit.cover,
+                    ).animate().fadeIn(duration: 700.ms).scaleXY(
+                          begin: 1.1,
+                          end: 1.0,
+                          curve: Curves.easeOutCubic,
+                          duration: 1500.ms,
+                        ),
+                  ),
                   Center(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           item['title']!,
-                          style: TextStyle(
-                            fontSize: 26,
+                          style: const TextStyle(
+                            fontSize: 30,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                blurRadius: 8.0,
+                                color: Colors.black87,
+                                offset: Offset(2, 2),
+                              )
+                            ],
                           ),
-                        ).animate().fadeIn().moveY(begin: -30),
-                        SizedBox(height: 20),
+                          textAlign: TextAlign.center,
+                        ).animate().fadeIn(duration: 900.ms).moveY(begin: -40),
+                        const SizedBox(height: 20),
                         ElevatedButton(
                           onPressed: () {},
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white),
-                          child: Text('Explore Now',
-                              style: TextStyle(color: Colors.black)),
-                        ).animate().fadeIn(duration: 1000.ms),
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 15),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30)),
+                            elevation: 10,
+                          ),
+                          child: const Text("Explore Now"),
+                        ).animate().fadeIn(duration: 1000.ms).moveY(begin: 40),
                       ],
                     ),
-                  )
+                  ),
                 ],
               );
-            }).toList(),
+            },
             options: CarouselOptions(
-              height: 300,
+              height: 280,
               autoPlay: true,
+              autoPlayAnimationDuration: const Duration(seconds: 2),
+              autoPlayCurve: Curves.easeInOutCubicEmphasized,
               viewportFraction: 1.0,
+              enlargeCenterPage: false,
+              scrollPhysics: const BouncingScrollPhysics(),
             ),
           ),
 
@@ -720,6 +778,55 @@ class BulletList extends StatelessWidget {
 }
 
 class FarmerDashboard extends StatelessWidget {
+  Widget buildDashboardCard(
+      Map<String, String> item, BuildContext context, bool isTablet) {
+    return GestureDetector(
+      onTap: () {
+        if (item['title'] == 'Market Trends') {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => AgricultureTrendsPage()));
+        } else if (item['title'] == 'Weather Updates') {
+          Navigator.push(
+              context, MaterialPageRoute(builder: (_) => WeatherMarketPage()));
+        }
+      },
+      child: Container(
+        height: isTablet ? 180 : 150,
+        margin: EdgeInsets.only(bottom: isTablet ? 24 : 16),
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(item['image']!),
+            fit: BoxFit.cover,
+          ),
+          borderRadius: BorderRadius.circular(isTablet ? 30 : 20),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(isTablet ? 30 : 20),
+            gradient: LinearGradient(
+              colors: [Color(0xE509A745), Color(0xE5ACB5B4)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(item['icon']!,
+                    style: TextStyle(fontSize: isTablet ? 48 : 32)),
+                Text(item['title']!,
+                    style: TextStyle(
+                        fontSize: isTablet ? 26 : 20,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   final List<Map<String, String>> dashboardItems = [
     {
       'title': 'Equipment Rentals',
@@ -767,8 +874,7 @@ class FarmerDashboard extends StatelessWidget {
         backgroundColor: Color(0xFF0d091e),
         title: Row(
           children: [
-            Image.asset('assets/logo.png.jpg', width: isTablet ? 50 : 35),
-            SizedBox(width: isTablet ? 20 : 10),
+            SizedBox(width: isTablet ? 20 : 20),
             Text('Kisan Connect',
                 style: TextStyle(fontSize: isTablet ? 30 : 30)),
           ],
@@ -785,134 +891,144 @@ class FarmerDashboard extends StatelessWidget {
                 Color(0x1c06b26a),
               ]),
             ),
-            child: Column(
-              children: [
-                Text("Welcome to Kisan Connect",
-                    style: TextStyle(
-                        fontSize: isTablet ? 40 : 32,
-                        fontWeight: FontWeight.bold)),
-                Text("Empowering Farmers with Technology",
-                    style: TextStyle(fontSize: isTablet ? 24 : 18)),
-              ],
-            ),
+            child: Builder(
+  builder: (context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    final isTablet = screenWidth > 600;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          "Welcome to Kisan Connect",
+          style: TextStyle(
+            fontSize: screenWidth * 0.06, // ~24px on phones, 36+ on tablets
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          "Empowering Farmers with Technology",
+          style: TextStyle(
+            fontSize: screenWidth * 0.045, // ~16–22 depending on screen
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  },
+),
+,
           ),
 
           // Search Bar
           Padding(
-            padding: EdgeInsets.all(isTablet ? 32 : 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Color(0xFFF2EAEA),
-                      hintText: 'Search for anything...',
-                      hintStyle: TextStyle(
-                          color: Colors.black54, fontSize: isTablet ? 20 : 14),
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: isTablet ? 32 : 20,
-                          vertical: isTablet ? 20 : 15),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(isTablet ? 30 : 20),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
+            padding:
+                EdgeInsets.all(24), // Reduced padding for a more compact look
+            child: TextField(
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+              ),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Color.fromARGB(255, 221, 216, 216),
+                hintText: 'Search...',
+                hintStyle: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 18,
                 ),
-                SizedBox(width: isTablet ? 20 : 10),
-                CircleAvatar(
-                  backgroundColor: Color(0xFFbf995c),
-                  radius: isTablet ? 28 : 20,
-                  child: Icon(Icons.search,
-                      color: Colors.white, size: isTablet ? 32 : 24),
-                )
-              ],
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Colors.black,
+                  size: 22, // Smaller icon
+                ),
+              ),
             ),
           ),
 
           // Dashboard Grid
           Padding(
             padding: EdgeInsets.symmetric(
-                horizontal: isTablet ? 32 : 16, vertical: isTablet ? 16 : 8),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: dashboardItems.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: isTablet ? 3 : 2,
-                crossAxisSpacing: isTablet ? 24 : 16,
-                mainAxisSpacing: isTablet ? 24 : 16,
-                childAspectRatio: isTablet ? 1.1 : 1.2,
-              ),
-              itemBuilder: (context, index) {
-                final item = dashboardItems[index];
-                return GestureDetector(
+              horizontal: isTablet ? 32 : 16,
+              vertical: isTablet ? 16 : 8,
+            ),
+            child: Column(
+              children: [
+                // Full-width first item
+                GestureDetector(
                   onTap: () {
-                    // Replace with your actual target page
-                    if (item['title'] == 'Equipment Rentals') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => EquipmentRentalPage()),
-                      );
-                    } else if (item['title'] == 'Market Trends') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => AgricultureTrendsPage()),
-                      );
-                    } else if (item['title'] == 'Weather Updates') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => WeatherMarketPage()),
-                      );
-                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => EquipmentRentalPage()),
+                    );
                   },
-                  child: Stack(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(item['image']!),
-                            fit: BoxFit.cover,
-                          ),
-                          borderRadius:
-                              BorderRadius.circular(isTablet ? 30 : 20),
+                  child: Container(
+                    width: double.infinity,
+                    height: isTablet ? 220 : 180,
+                    margin: EdgeInsets.only(bottom: isTablet ? 24 : 16),
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(dashboardItems[0]['image']!),
+                        fit: BoxFit.cover,
+                      ),
+                      borderRadius: BorderRadius.circular(isTablet ? 30 : 20),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(isTablet ? 30 : 20),
+                        gradient: LinearGradient(
+                          colors: [Color(0xE509A745), Color(0xE5ACB5B4)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius:
-                              BorderRadius.circular(isTablet ? 30 : 20),
-                          gradient: LinearGradient(
-                            colors: [
-                              Color(0xE509A745),
-                              Color(0xE5ACB5B4),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                      ),
-                      Center(
+                      child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(item['icon']!,
+                            Text(dashboardItems[0]['icon']!,
                                 style: TextStyle(fontSize: isTablet ? 48 : 32)),
-                            Text(item['title']!,
+                            Text(dashboardItems[0]['title']!,
                                 style: TextStyle(
                                     fontSize: isTablet ? 26 : 20,
                                     fontWeight: FontWeight.bold)),
                           ],
                         ),
-                      )
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Remaining items in 2-column layout
+                for (int i = 1; i < dashboardItems.length; i += 2)
+                  Row(
+                    children: [
+                      Expanded(
+                          child: buildDashboardCard(
+                              dashboardItems[i], context, isTablet)),
+                      SizedBox(width: isTablet ? 24 : 16),
+                      if (i + 1 < dashboardItems.length)
+                        Expanded(
+                            child: buildDashboardCard(
+                                dashboardItems[i + 1], context, isTablet)),
+                      if (i + 1 >= dashboardItems.length)
+                        Expanded(child: SizedBox()), // Empty space if odd count
                     ],
                   ),
-                );
-              },
+              ],
             ),
           ),
 
@@ -985,7 +1101,7 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
       'location': 'Maharashtra',
       'duration': 'daily',
       'availability': 'Available',
-      'image': 'assets/tractor.jpg'
+      'image': 'assets/tractor.jpg',
     },
     {
       'name': 'Harvester',
@@ -993,7 +1109,7 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
       'location': 'Uttar Pradesh',
       'duration': 'weekly',
       'availability': 'Available',
-      'image': 'assets/harvester.jpg'
+      'image': 'assets/harvester.jpg',
     },
     {
       'name': 'Sprayer',
@@ -1001,7 +1117,7 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
       'location': 'Karnataka',
       'duration': 'daily',
       'availability': 'Available',
-      'image': 'assets/sprayer.jpg'
+      'image': 'assets/sprayer.jpg',
     },
     {
       'name': 'Seeder',
@@ -1009,7 +1125,7 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
       'location': 'Gujarat',
       'duration': 'daily',
       'availability': 'Available',
-      'image': 'assets/seeder.jpg'
+      'image': 'assets/seeder.jpg',
     }
   ];
 
@@ -1023,7 +1139,7 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
               item['category'] == selectedCategory) &&
           (selectedDuration == 'all' || item['duration'] == selectedDuration) &&
           (locationQuery.isEmpty ||
-              item['location']!
+              (item['location'] ?? '')
                   .toLowerCase()
                   .contains(locationQuery.toLowerCase()));
     }).toList();
@@ -1033,12 +1149,12 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Booking Confirmation'),
+        title: const Text('Booking Confirmation'),
         content: Text('You have successfully booked the $name.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Close'),
+            child: const Text('Close'),
           ),
         ],
       ),
@@ -1053,23 +1169,23 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF0d091e),
-        title: Row(
-          children: [
-            Image.asset('assets/logo.png.jpg', width: isTablet ? 50 : 35),
-            SizedBox(width: isTablet ? 20 : 10),
-            Text('Kisan Connect',
-                style: TextStyle(fontSize: isTablet ? 28 : 20)),
-          ],
-        ),
+        backgroundColor: const Color.fromARGB(255, 10, 176, 168),
+        title: Text('Kisan Connect',
+            style: TextStyle(fontSize: isTablet ? 28 : 24)),
         actions: [
-          TextButton(
-            onPressed: () {},
-            child: Text('Contact Us', style: TextStyle(color: Colors.amber)),
-          ),
-          TextButton(
-            onPressed: () {},
-            child: Text('About Us', style: TextStyle(color: Colors.amber)),
+          PopupMenuButton<int>(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 1, child: Text('About Us')),
+              PopupMenuItem(value: 2, child: Text('Contact Us')),
+            ],
+            onSelected: (value) {
+              if (value == 1) {
+                // Navigator.push(context, MaterialPageRoute(builder: (_) => AboutUsPage()));
+              } else if (value == 2) {
+                // Navigator.push(context, MaterialPageRoute(builder: (_) => ContactUsPage()));
+              }
+            },
           ),
         ],
       ),
@@ -1077,40 +1193,39 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
         padding: EdgeInsets.all(isTablet ? 32 : 16),
         children: [
           Container(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white10,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
-              children: [
-                Text('Welcome to Our Equipment Rental Platform',
-                    style: TextStyle(
-                        fontSize: isTablet ? 24 : 20,
-                        fontWeight: FontWeight.bold)),
+              children: const [
+                Text(
+                  'Welcome to Equipment Rental',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
                 SizedBox(height: 8),
                 Text(
-                  'Rent farming machinery at affordable prices. Access the best equipment when you need it.',
+                  'Rent farming machinery at affordable prices.',
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Card(
             color: Colors.white10,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Find the Perfect Equipment',
-                      style: TextStyle(
-                          fontSize: isTablet ? 20 : 18,
-                          fontWeight: FontWeight.bold)),
-                  SizedBox(height: 10),
+                  const Text('Select',
+                      style:
+                          TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
                     value: selectedCategory,
                     items: [
@@ -1119,22 +1234,23 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
                       'harvesters',
                       'sprayers',
                       'irrigation',
-                      'seeders'
+                      'seeders',
                     ]
                         .map((e) => DropdownMenuItem(
                               value: e,
                               child: Text(e[0].toUpperCase() + e.substring(1)),
                             ))
                         .toList(),
-                    onChanged: (val) => setState(() => selectedCategory = val!),
-                    decoration: InputDecoration(labelText: 'Category'),
+                    onChanged: (val) =>
+                        setState(() => selectedCategory = val ?? 'all'),
+                    decoration: const InputDecoration(labelText: 'Category'),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextField(
-                    decoration: InputDecoration(labelText: 'Location'),
+                    decoration: const InputDecoration(labelText: 'Location'),
                     onChanged: (val) => setState(() => locationQuery = val),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
                     value: selectedDuration,
                     items: ['all', 'daily', 'weekly', 'seasonal']
@@ -1143,20 +1259,24 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
                               child: Text(e[0].toUpperCase() + e.substring(1)),
                             ))
                         .toList(),
-                    onChanged: (val) => setState(() => selectedDuration = val!),
-                    decoration: InputDecoration(labelText: 'Rental Duration'),
+                    onChanged: (val) =>
+                        setState(() => selectedDuration = val ?? 'all'),
+                    decoration:
+                        const InputDecoration(labelText: 'Rental Duration'),
                   ),
                 ],
               ),
             ),
           ),
-          SizedBox(height: 20),
-          Text('Available Equipment',
-              style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.greenAccent)),
-          SizedBox(height: 10),
+          const SizedBox(height: 20),
+          const Text(
+            'Available Equipment',
+            style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.greenAccent),
+          ),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 16,
             runSpacing: 16,
@@ -1167,44 +1287,41 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
                   color: Colors.white10,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset(item['image']!, height: 150, fit: BoxFit.cover),
-                    SizedBox(height: 10),
-                    Text(item['name']!,
-                        style: TextStyle(
+                    Image.asset(item['image'] ?? '',
+                        height: 150, fit: BoxFit.cover),
+                    const SizedBox(height: 10),
+                    Text(item['name'] ?? '',
+                        style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text('Availability: ${item['availability']}'),
-                    Text('Location: ${item['location']}'),
-                    SizedBox(height: 10),
+                    Text('Availability: ${item['availability'] ?? 'Unknown'}'),
+                    Text('Location: ${item['location'] ?? 'Unknown'}'),
+                    const SizedBox(height: 10),
                     ElevatedButton(
-                      onPressed: () => showBookingDialog(item['name']!),
-                      child: Text('Book Now'),
+                      onPressed: () =>
+                          showBookingDialog(item['name'] ?? 'Equipment'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                      ),
+                          backgroundColor: Colors.green),
+                      child: const Text('Book Now'),
                     )
                   ],
                 ),
               );
             }).toList(),
           ),
-          SizedBox(height: 40),
-          Divider(),
+          const SizedBox(height: 40),
+          const Divider(),
           Center(
             child: Column(
               children: [
-                Text('© 2025 Kisan Connect. All rights reserved.'),
+                const Text('© 2025 Kisan Connect. All rights reserved.'),
                 TextButton(
-                  onPressed: () {},
-                  child: Text('Privacy Policy'),
-                ),
+                    onPressed: () {}, child: const Text('Privacy Policy')),
                 TextButton(
-                  onPressed: () {},
-                  child: Text('Terms of Service'),
-                ),
+                    onPressed: () {}, child: const Text('Terms of Service')),
               ],
             ),
           ),
@@ -4210,6 +4327,540 @@ class ChatBubble extends StatelessWidget {
           style: TextStyle(
             color: isSender ? const Color(0xFF111827) : const Color(0xFFD1D5DB),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  String role = 'farmer';
+
+  void handleLogin() {
+    String dashboard = role == 'farmer' ? 'FarmerDashboard' : 'BuyerDashboard';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Redirecting to $dashboard...')),
+    );
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage()),
+    );
+  }
+
+  void handleForgotPassword() {
+    String recoveryPage =
+        role == 'farmer' ? 'FarmerForgotPassword' : 'BuyerForgotPassword';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Navigating to $recoveryPage...')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context).size;
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFF0D091E),
+        title: Row(
+          children: [
+            SizedBox(width: 35),
+            Text('Kisan Konnect'),
+          ],
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: media.height * 0.05),
+            Center(
+              child: Text(
+                'Login\nPlease enter your credentials',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+            ),
+            SizedBox(height: media.height * 0.05),
+            Container(
+              width: media.width * 0.85,
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8)],
+              ),
+              child: Column(
+                children: [
+                  Text('Welcome Back!',
+                      style:
+                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 20),
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(labelText: 'Email'),
+                  ),
+                  SizedBox(height: 15),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(labelText: 'Password'),
+                  ),
+                  SizedBox(height: 15),
+                  DropdownButtonFormField<String>(
+                    value: role,
+                    items: [
+                      DropdownMenuItem(child: Text("Farmer"), value: "farmer"),
+                      DropdownMenuItem(child: Text("Buyer"), value: "buyer"),
+                    ],
+                    onChanged: (value) => setState(() => role = value!),
+                    decoration: InputDecoration(labelText: 'I am a'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF000702),
+                      minimumSize: Size(double.infinity, 48),
+                    ),
+                    child: Text('Login'),
+                  ),
+                  SizedBox(height: 10),
+                  TextButton(
+                    onPressed: handleForgotPassword,
+                    child: Text('Forgot Password?',
+                        style: TextStyle(color: Colors.greenAccent)),
+                  ),
+                  SizedBox(height: 10),
+
+// Place this inside your widget's build method:
+                  Text.rich(
+                    TextSpan(
+                      text: "Don't have an account? ",
+                      style: TextStyle(color: Colors.white),
+                      children: [
+                        TextSpan(
+                          text: "Register as a Farmer",
+                          style: TextStyle(color: Colors.greenAccent),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              // Navigate to Farmer Registration Page
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        FarmerRegistrationPage()),
+                              );
+                            },
+                        ),
+                        const TextSpan(text: " | "),
+                        TextSpan(
+                          text: "Register as a Buyer",
+                          style: TextStyle(color: Colors.greenAccent),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              // Navigate to Buyer Registration Page
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        BuyerRegistrationPage()),
+                              );
+                            },
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  )
+                ],
+              ),
+            ),
+            SizedBox(height: media.height * 0.1),
+            Divider(color: Colors.white54),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                children: [
+                  Text('© 2025 Kisan Konnect. All rights reserved.',
+                      style: TextStyle(color: Colors.white70)),
+                  SizedBox(height: 4),
+                  Text(
+                      'Customer Support: 1800 267 0997 | Email: customercare@kisankonnect.in',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white54, fontSize: 12)),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class FarmerRegistrationPage extends StatefulWidget {
+  @override
+  _FarmerRegistrationPageState createState() => _FarmerRegistrationPageState();
+}
+
+class _FarmerRegistrationPageState extends State<FarmerRegistrationPage> {
+  final _formKey = GlobalKey<FormState>();
+  final fullNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  void handleSubmit() {
+    if (_formKey.currentState!.validate()) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => FarmerDashboard()),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Registration Submitted")),
+      );
+      // Handle backend logic here
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => FarmerDashboard()),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0D091E),
+        title: Row(
+          children: [
+            const Text(" "),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {},
+            child:
+                const Text("About Us", style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () {},
+            child:
+                const Text("Contact Us", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+            vertical: size.height * 0.05, horizontal: size.width * 0.05),
+        child: Center(
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 600),
+            decoration: BoxDecoration(
+              color: Colors.white12,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [BoxShadow(color: Colors.black45, blurRadius: 10)],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(46, 137, 130, 0.8),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(15)),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Farmer Registration',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        buildTextField("Full Name", fullNameController),
+                        const SizedBox(height: 15),
+                        buildTextField("Email Address", emailController,
+                            inputType: TextInputType.emailAddress),
+                        const SizedBox(height: 15),
+                        buildTextField("Phone Number", phoneController,
+                            inputType: TextInputType.phone),
+                        const SizedBox(height: 15),
+                        buildTextField("Password", passwordController,
+                            isPassword: true),
+                        const SizedBox(height: 15),
+                        buildTextField(
+                            "Confirm Password", confirmPasswordController,
+                            isPassword: true),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: handleSubmit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF38BE14),
+                            minimumSize: Size(double.infinity, 50),
+                          ),
+                          child: const Text("Register"),
+                        ),
+                        const SizedBox(height: 15),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => FarmerDashboard()),
+                            );
+                            // Navigate to login screen
+                          },
+                          child: const Text.rich(
+                            TextSpan(
+                              text: "Already have an account? ",
+                              children: [
+                                TextSpan(
+                                  text: "Login",
+                                  style: TextStyle(color: Color(0xFF38BE14)),
+                                )
+                              ],
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(
+          "© 2025 Kisan Konnect. All rights reserved.",
+          style: TextStyle(color: Colors.white54),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  Widget buildTextField(String label, TextEditingController controller,
+      {TextInputType inputType = TextInputType.text, bool isPassword = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          keyboardType: inputType,
+          obscureText: isPassword,
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Please enter $label';
+            if (label == 'Confirm Password' && value != passwordController.text)
+              return 'Passwords do not match';
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class BuyerRegistrationPage extends StatefulWidget {
+  @override
+  _BuyerRegistrationPageState createState() => _BuyerRegistrationPageState();
+}
+
+class _BuyerRegistrationPageState extends State<BuyerRegistrationPage> {
+  final _formKey = GlobalKey<FormState>();
+  final fullNameController = TextEditingController();
+  final phoneController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  void handleRegister() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BuyerDashboardPage()),
+    );
+    // You can navigate to dashboard here
+  }
+
+  Widget buildInputField(String label, TextEditingController controller,
+      {bool isPassword = false,
+      TextInputType keyboardType = TextInputType.text}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          obscureText: isPassword,
+          keyboardType: keyboardType,
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Enter $label';
+            if (label == 'Confirm Password' &&
+                value != passwordController.text) {
+              return 'Passwords do not match';
+            }
+            return null;
+          },
+        ),
+      ]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0D091E),
+        title: Row(
+          children: [
+            // Make sure to include this in assets
+            const Text(" "),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {},
+            child:
+                const Text("About Us", style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () {},
+            child:
+                const Text("Contact Us", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+            vertical: size.height * 0.05, horizontal: size.width * 0.05),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 600),
+            decoration: BoxDecoration(
+              color: Colors.white12,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: const [
+                BoxShadow(color: Colors.black45, blurRadius: 8),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color.fromRGBO(46, 137, 130, 0.8),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(15)),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Buyer Registration',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        buildInputField("Full Name", fullNameController),
+                        buildInputField("Phone Number", phoneController,
+                            keyboardType: TextInputType.phone),
+                        buildInputField("Email Address", emailController,
+                            keyboardType: TextInputType.emailAddress),
+                        buildInputField("Password", passwordController,
+                            isPassword: true),
+                        buildInputField(
+                            "Confirm Password", confirmPasswordController,
+                            isPassword: true),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: handleRegister,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF38BE14),
+                            minimumSize: const Size(double.infinity, 48),
+                          ),
+                          child: const Text("Register"),
+                        ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => BuyerDashboardPage()),
+                            );
+                            // Navigate to login
+                          },
+                          child: Text.rich(
+                            TextSpan(
+                              text: "Already have an account? ",
+                              children: [
+                                TextSpan(
+                                  text: "Login",
+                                  style: TextStyle(
+                                    color: Color(0xFF38BE14),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      // 🔁 Navigate to login page or perform action
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => LoginPage()),
+                                      );
+                                    },
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: const Padding(
+        padding: EdgeInsets.all(12.0),
+        child: Text(
+          "© 2025 Kisan Konnect. All rights reserved.",
+          style: TextStyle(color: Colors.white54),
+          textAlign: TextAlign.center,
         ),
       ),
     );
