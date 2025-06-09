@@ -24,6 +24,17 @@ class KisanConnectApp extends StatelessWidget {
       ),
       home: HomePage(),
       debugShowCheckedModeBanner: false,
+          builder: (context, child) {
+        // Forces all AppBars to have centerTitle: true by default
+        return Theme(
+          data: Theme.of(context).copyWith(
+            appBarTheme: Theme.of(context).appBarTheme.copyWith(
+                  centerTitle: true,
+                ),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }
@@ -892,36 +903,37 @@ class FarmerDashboard extends StatelessWidget {
               ]),
             ),
             child: Builder(
-  builder: (context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+              builder: (context) {
+                final screenWidth = MediaQuery.of(context).size.width;
+                final screenHeight = MediaQuery.of(context).size.height;
 
-    final isTablet = screenWidth > 600;
+                final isTablet = screenWidth > 600;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          "Welcome to Kisan Connect",
-          style: TextStyle(
-            fontSize: screenWidth * 0.06, // ~24px on phones, 36+ on tablets
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          "Empowering Farmers with Technology",
-          style: TextStyle(
-            fontSize: screenWidth * 0.045, // ~16–22 depending on screen
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  },
-),
-,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Welcome to Kisan Connect",
+                      style: TextStyle(
+                        fontSize: screenWidth *
+                            0.06, // ~24px on phones, 36+ on tablets
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Empowering Farmers with Technology",
+                      style: TextStyle(
+                        fontSize:
+                            screenWidth * 0.045, // ~16–22 depending on screen
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
 
           // Search Bar
@@ -1281,33 +1293,36 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
             spacing: 16,
             runSpacing: 16,
             children: filteredEquipment.map((item) {
-              return Container(
-                width: 300,
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Image.asset(item['image'] ?? '',
-                        height: 150, fit: BoxFit.cover),
-                    const SizedBox(height: 10),
-                    Text(item['name'] ?? '',
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text('Availability: ${item['availability'] ?? 'Unknown'}'),
-                    Text('Location: ${item['location'] ?? 'Unknown'}'),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: () =>
-                          showBookingDialog(item['name'] ?? 'Equipment'),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green),
-                      child: const Text('Book Now'),
-                    )
-                  ],
+              return Center(
+                child: Container(
+                  width: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(item['image'] ?? '',
+                          height: 150, fit: BoxFit.cover),
+                      const SizedBox(height: 10),
+                      Text(item['name'] ?? '',
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(
+                          'Availability: ${item['availability'] ?? 'Unknown'}'),
+                      Text('Location: ${item['location'] ?? 'Unknown'}'),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () =>
+                            showBookingDialog(item['name'] ?? 'Equipment'),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green),
+                        child: const Text('Book Now'),
+                      )
+                    ],
+                  ),
                 ),
               );
             }).toList(),
@@ -1994,7 +2009,10 @@ class _CropsViewScreenState extends State<CropsViewScreen> {
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.symmetric(
+            vertical: 70, // 50% of screen height
+            horizontal: 20, // 100% of screen width
+          ),
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -2146,16 +2164,21 @@ class _ProduceFAQScreenState extends State<ProduceFAQScreen> {
   ];
 
   String searchQuery = '';
+  final ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
     final filteredData = faqData.where((faq) {
-      final query = searchQuery.toLowerCase();
-      return faq['question']!.toLowerCase().contains(query) ||
-          faq['answer']!.toLowerCase().contains(query);
+      final query = searchQuery.trim().toLowerCase();
+      final question = faq['question']!.toLowerCase();
+      final answer = faq['answer']!.toLowerCase();
+      return query
+          .split(' ')
+          .every((word) => question.contains(word) || answer.contains(word));
     }).toList();
 
     return Scaffold(
+      backgroundColor: const Color(0xFF141414),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0d091e),
         title: Row(
@@ -2166,33 +2189,53 @@ class _ProduceFAQScreenState extends State<ProduceFAQScreen> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () {},
-            child:
-                const Text('About Us', style: TextStyle(color: Colors.amber)),
-          ),
-          TextButton(
-            onPressed: () {},
-            child:
-                const Text('Contact Us', style: TextStyle(color: Colors.amber)),
+          PopupMenuButton<int>(
+            icon: const Icon(Icons.more_vert, color: Colors.amber),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 1, child: Text('About Us')),
+              const PopupMenuItem(value: 2, child: Text('Contact Us')),
+            ],
+            onSelected: (value) {
+              if (value == 1) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AboutUsPage()),
+                );
+              } else if (value == 2) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ContactUsPage()),
+                );
+              }
+            },
           ),
         ],
+        centerTitle: true,
+        elevation: 2,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        controller: _scrollController,
+        padding: const EdgeInsets.all(30),
         children: [
-          const Center(
+          Center(
             child: Text(
               "Fresh Produce FAQ's",
-              style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.greenAccent,
+                  ),
             ),
           ),
           const SizedBox(height: 20),
           TextField(
-            onChanged: (value) => setState(() => searchQuery = value),
+            onChanged: (value) {
+              setState(() => searchQuery = value);
+              _scrollController.animateTo(
+                0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            },
             decoration: InputDecoration(
               hintText: 'Search FAQs...',
               filled: true,
@@ -2207,30 +2250,68 @@ class _ProduceFAQScreenState extends State<ProduceFAQScreen> {
             style: const TextStyle(color: Colors.white),
           ),
           const SizedBox(height: 20),
+          if (filteredData.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Text(
+                  "No FAQs found for your search.",
+                  style: TextStyle(color: Colors.redAccent, fontSize: 16),
+                ),
+              ),
+            ),
           ...filteredData.asMap().entries.map((entry) {
             final index = entry.key;
             final faq = entry.value;
-            return ExpansionTile(
-              collapsedBackgroundColor: Colors.green,
-              backgroundColor: Colors.green.shade700,
-              collapsedTextColor: Colors.white,
-              textColor: Colors.white,
-              title: Text(
-                '${index + 1}. ${faq['question']}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              color: Colors.green.shade700,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  color: Colors.white,
-                  child: Text(
-                    faq['answer']!,
-                    style: const TextStyle(color: Colors.black),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                  splashColor: Colors.transparent,
+                ),
+                child: ExpansionTile(
+                  collapsedBackgroundColor: Colors.green,
+                  backgroundColor: Colors.green.shade700,
+                  collapsedTextColor: Colors.white,
+                  textColor: Colors.white,
+                  iconColor: Colors.white,
+                  title: Text(
+                    '${index + 1}. ${faq['question']}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                )
-              ],
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        faq['answer']!,
+                        style: const TextStyle(color: Colors.black),
+                      ),
+                    )
+                  ],
+                ),
+              ),
             );
           }),
+          const SizedBox(height: 30),
+          Divider(color: Colors.white24),
+          Center(
+            child: Text(
+              "© 2025 Kisan Connect. All rights reserved.",
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
         ],
       ),
     );
@@ -4085,7 +4166,8 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
         title: const Text('Contract Details',
             style: TextStyle(color: Colors.white)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF9FE62C)),
+          icon: const Icon(Icons.arrow_back,
+              color: Color.fromARGB(255, 91, 119, 91)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
