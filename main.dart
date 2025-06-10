@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'dart:convert';
 import 'package:flutter/gestures.dart';
-import 'package:http/http.dart' as http;
 
 void main() => runApp(KisanConnectApp());
 
@@ -23,13 +21,23 @@ class KisanConnectApp extends StatelessWidget {
       ),
       home: HomePage(),
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        // Forces all AppBars to have centerTitle: true by default
+        return Theme(
+          data: Theme.of(context).copyWith(
+            appBarTheme: Theme.of(context).appBarTheme.copyWith(
+                  centerTitle: true,
+                ),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }
 
 class HomePage extends StatelessWidget {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   final List<Map<String, String>> carouselItems = [
     {"image": "assets/image1.jpg", "title": "Explore Our Crops"},
     {"image": "assets/image2.jpg", "title": "Top Quality Equipment"},
@@ -149,8 +157,10 @@ class HomePage extends StatelessWidget {
                 position: const RelativeRect.fromLTRB(100, 80, 0, 0),
                 items: const [
                   PopupMenuItem(value: 1, child: Text("Log-in")),
-                  PopupMenuItem(value: 2, child: Text("Log-out")),
-                  PopupMenuItem(value: 3, child: Text("Help")),
+                  PopupMenuItem(value: 2, child: Text("Farmer Dashboard")),
+                  PopupMenuItem(value: 3, child: Text("Buyer Dashbaord")),
+                  PopupMenuItem(value: 4, child: Text("Log-out")),
+                  PopupMenuItem(value: 5, child: Text("Help")),
                 ],
               ).then((value) {
                 if (value == 1) {
@@ -159,12 +169,21 @@ class HomePage extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => LoginPage()),
                   );
                 } else if (value == 2) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Logout succesfully ....")));
-                } else if (value == 3) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Help selected....")),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => FarmerDashboard()),
                   );
+                  // ScaffoldMessenger.of(context).showSnackBar(
+                  //     const SnackBar(content: Text("Logout succesfully ....")));
+                } else if (value == 3) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => BuyerDashboardPage()),
+                  );
+                  // ScaffoldMessenger.of(context).showSnackBar(
+                  //   const SnackBar(content: Text("Help selected....")),
+                  // );
                 }
               });
             },
@@ -4413,50 +4432,15 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   String role = 'farmer';
 
-  void handleLogin() async {
-    final url = Uri.parse(
-        'https://8671a5f8-6323-4a16-9356-a2dd53e7078c-00-2m041txxfet0b.pike.replit.dev/kisanlogin/');
-
-    final identifier = emailController.text.trim(); // could be email or phone
-    final password = passwordController.text.trim();
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "identifier": identifier,
-          "password": password,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final userType = data['user_type'];
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Welcome  ${userType}  (${data['full_name']})')),
-        );
-
-        if (userType == 'Farmer') {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => FarmerDashboard()));
-        } else {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => BuyerDashboardPage()));
-        }
-      } else {
-        final error = jsonDecode(response.body)['error'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Login failed: $error')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('🔥 Network error: $e')),
-      );
-    }
+  void handleLogin() {
+    String dashboard = role == 'farmer' ? 'FarmerDashboard' : 'BuyerDashboard';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Redirecting to $dashboard...')),
+    );
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage()),
+    );
   }
 
   void handleForgotPassword() {
@@ -4518,7 +4502,16 @@ class _LoginPageState extends State<LoginPage> {
                     obscureText: true,
                     decoration: InputDecoration(labelText: 'Password'),
                   ),
-
+                  SizedBox(height: 15),
+                  DropdownButtonFormField<String>(
+                    value: role,
+                    items: [
+                      DropdownMenuItem(child: Text("Farmer"), value: "farmer"),
+                      DropdownMenuItem(child: Text("Buyer"), value: "buyer"),
+                    ],
+                    onChanged: (value) => setState(() => role = value!),
+                    decoration: InputDecoration(labelText: 'I am a'),
+                  ),
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: handleLogin,
@@ -4613,93 +4606,22 @@ class _FarmerRegistrationPageState extends State<FarmerRegistrationPage> {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  final pricinghourController = TextEditingController();
-  final pricingdayController = TextEditingController();
-  final totalacreController = TextEditingController();
-  final typecropController = TextEditingController();
-
-  final pricingweekController = TextEditingController();
-
-  final pricingmonthController = TextEditingController();
-
-  final pricingacreController = TextEditingController();
-
-  final locationController = TextEditingController();
-  final languageController = TextEditingController();
-  String userType = "Farmer"; // or "Buyer"
-
-  String? role;
 
   void handleSubmit() {
     if (_formKey.currentState!.validate()) {
-      submitRegistrationData();
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => FarmerDashboard()),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Registration Submitted")),
       );
       // Handle backend logic here
     } else {
-      // After successful registration, navigate to the login page or dashboard
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
+        MaterialPageRoute(builder: (context) => FarmerDashboard()),
       );
-    }
-  }
-
-  Future<void> submitRegistrationData() async {
-    final url = Uri.parse(
-        'https://8671a5f8-6323-4a16-9356-a2dd53e7078c-00-2m041txxfet0b.pike.replit.dev/kisanregister/');
-
-    // Common fields
-    Map<String, dynamic> data = {
-      "user_type": userType,
-      "full_name": fullNameController.text.trim(),
-      "email": emailController.text.trim(),
-      "phone_number": phoneController.text.trim(),
-      "password": passwordController.text.trim(),
-    };
-
-    // Farmer additional fields
-    if (userType == "Farmer") {
-      data.addAll({
-        "no_of_acres": totalacreController.text.trim(),
-        "crop_type": typecropController.text.trim(),
-        "has_equipment": role,
-        "pricing_per_hour":
-            role == "Yes" ? pricinghourController.text.trim() : "",
-        "pricing_per_day":
-            role == "Yes" ? pricingdayController.text.trim() : "",
-        "pricing_per_week":
-            role == "Yes" ? pricingweekController.text.trim() : "",
-        "pricing_per_month":
-            role == "Yes" ? pricingmonthController.text.trim() : "",
-        "pricing_per_acre":
-            role == "Yes" ? pricingacreController.text.trim() : "",
-        "location": role == "Yes" ? locationController.text.trim() : "",
-        "language": role == "Yes" ? languageController.text.trim() : "",
-      });
-    }
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      );
-
-      if (response.statusCode == 200) {
-        print("✅ Registration successful");
-        print(jsonDecode(response.body));
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => FarmerDashboard()),
-        );
-      } else {
-        print("❌ Error: ${response.statusCode}");
-        print(response.body);
-      }
-    } catch (e) {
-      print("🔥 Exception: $e");
     }
   }
 
@@ -4717,12 +4639,22 @@ class _FarmerRegistrationPageState extends State<FarmerRegistrationPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AboutUsPage()),
+              );
+            },
             child:
                 const Text("About Us", style: TextStyle(color: Colors.white)),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ContactUsPage()),
+              );
+            },
             child:
                 const Text("Contact Us", style: TextStyle(color: Colors.white)),
           ),
@@ -4770,45 +4702,7 @@ class _FarmerRegistrationPageState extends State<FarmerRegistrationPage> {
                         const SizedBox(height: 15),
                         buildTextField("Phone Number", phoneController,
                             inputType: TextInputType.phone),
-                        buildTextField(
-                            "No of Acres of land", totalacreController,
-                            inputType: TextInputType.phone),
-                        buildTextField("Type of crop", typecropController,
-                            inputType: TextInputType.phone),
-                        DropdownButtonFormField<String>(
-                          value: role,
-                          items: [
-                            DropdownMenuItem(child: Text("Yes"), value: "Yes"),
-                            DropdownMenuItem(child: Text("No"), value: "No"),
-                          ],
-                          onChanged: (value) => setState(() => role = value),
-                          decoration:
-                              InputDecoration(labelText: 'Equipment Type'),
-                          validator: (value) =>
-                              value == null ? 'Please select an option' : null,
-                        ),
-                        if (role == 'Yes') ...[
-                          buildTextField(
-                              "Pricing per Hour", pricinghourController,
-                              inputType: TextInputType.phone),
-                          buildTextField(
-                              "Pricing per Day", pricingdayController,
-                              inputType: TextInputType.phone),
-                          buildTextField(
-                              "Pricing per Week", pricingweekController,
-                              inputType: TextInputType.phone),
-                          buildTextField(
-                              "Pricing per Month", pricingmonthController,
-                              inputType: TextInputType.phone),
-                          buildTextField(
-                              "Pricing per Acre", pricingacreController,
-                              inputType: TextInputType.phone),
-                          buildTextField("Location", locationController,
-                              inputType: TextInputType.phone),
-                          buildTextField("Language", languageController,
-                              inputType: TextInputType.phone),
-                        ],
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         buildTextField("Password", passwordController,
                             isPassword: true),
                         const SizedBox(height: 15),
@@ -4827,7 +4721,11 @@ class _FarmerRegistrationPageState extends State<FarmerRegistrationPage> {
                         const SizedBox(height: 15),
                         TextButton(
                           onPressed: () {
-                            submitRegistrationData();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => FarmerDashboard()),
+                            );
                             // Navigate to login screen
                           },
                           child: const Text.rich(
@@ -4897,13 +4795,11 @@ class _BuyerRegistrationPageState extends State<BuyerRegistrationPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  String userType = "Buyer";
 
-  void handleRegister() async {
-    await submitRegistrationData();
+  void handleRegister() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+      MaterialPageRoute(builder: (context) => BuyerDashboardPage()),
     );
     // You can navigate to dashboard here
   }
@@ -4933,44 +4829,6 @@ class _BuyerRegistrationPageState extends State<BuyerRegistrationPage> {
     );
   }
 
-  Future<void> submitRegistrationData() async {
-    final url = Uri.parse(
-        'https://8671a5f8-6323-4a16-9356-a2dd53e7078c-00-2m041txxfet0b.pike.replit.dev/kisanregister/');
-
-    // Common fields
-    Map<String, dynamic> data = {
-      "user_type": userType,
-      "full_name": fullNameController.text.trim(),
-      "email": emailController.text.trim(),
-      "phone_number": phoneController.text.trim(),
-      "password": passwordController.text.trim(),
-    };
-
-    // Farmer additional fields
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      );
-
-      if (response.statusCode == 200) {
-        print("✅ Registration successful");
-        print(jsonDecode(response.body));
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => LoginPage()),
-        );
-      } else {
-        print("❌ Error: ${response.statusCode}");
-        print(response.body);
-      }
-    } catch (e) {
-      print("🔥 Exception: $e");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -4986,12 +4844,22 @@ class _BuyerRegistrationPageState extends State<BuyerRegistrationPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AboutUsPage()),
+              );
+            },
             child:
                 const Text("About Us", style: TextStyle(color: Colors.white)),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ContactUsPage()),
+              );
+            },
             child:
                 const Text("Contact Us", style: TextStyle(color: Colors.white)),
           ),
@@ -5055,9 +4923,12 @@ class _BuyerRegistrationPageState extends State<BuyerRegistrationPage> {
                         ),
                         const SizedBox(height: 16),
                         TextButton(
-                          onPressed: () async {
-                            await submitRegistrationData();
-
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => BuyerDashboardPage()),
+                            );
                             // Navigate to login
                           },
                           child: Text.rich(
@@ -5073,12 +4944,11 @@ class _BuyerRegistrationPageState extends State<BuyerRegistrationPage> {
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
                                       // 🔁 Navigate to login page or perform action
-                                      // Navigator.push(
-                                      //   context,
-                                      //   MaterialPageRoute(
-                                      //       builder: (context) => LoginPage()),
-                                      // );
-                                      submitRegistrationData();
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => LoginPage()),
+                                      );
                                     },
                                 ),
                               ],
