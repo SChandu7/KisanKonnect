@@ -5,7 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gmap;
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:kisankonect2/l10n/app_localizations.dart';
@@ -68,15 +68,51 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool showMap = false;
-  late GoogleMapController mapController;
-  final LatLng _center = const LatLng(16.5062, 80.6480); // Vijayawada, AP
   final FlutterTts flutterTts = FlutterTts();
 
   // Mumbai
 
-  void _onMapCreated(GoogleMapController controller) {
-    mapController = controller;
+  // 1️⃣ Add at the top of your state class
+  bool showMap = false;
+
+  final gmap.LatLng _center = const gmap.LatLng(
+    16.5062,
+    80.6480,
+  ); // Vijayawada center
+
+  late gmap.GoogleMapController _mapController;
+
+  final Set<gmap.Marker> _markers = {
+    gmap.Marker(
+      markerId: const gmap.MarkerId("vij_east"),
+      position: const gmap.LatLng(16.5062, 80.6880), // East
+      infoWindow: const gmap.InfoWindow(title: "Crop Zone - East Vijayawada"),
+    ),
+
+    gmap.Marker(
+      markerId: const gmap.MarkerId("vij_west"),
+      position: const gmap.LatLng(16.5062, 80.4880), // West
+      infoWindow: const gmap.InfoWindow(title: "Crop Zone - West Vijayawada"),
+    ),
+    gmap.Marker(
+      markerId: const gmap.MarkerId("vij_west"),
+      position: const gmap.LatLng(16.4062, 80.6000), // West
+      infoWindow: const gmap.InfoWindow(title: "Crop Zone - mid Vijayawada"),
+    ),
+    gmap.Marker(
+      markerId: const gmap.MarkerId("vij_north"),
+      position: const gmap.LatLng(16.5462, 80.6480), // North
+      infoWindow: const gmap.InfoWindow(title: "Crop Zone - North Vijayawada"),
+    ),
+    gmap.Marker(
+      markerId: const gmap.MarkerId("vij_south"),
+      position: const gmap.LatLng(16.3662, 80.6680), // South
+      infoWindow: const gmap.InfoWindow(title: "Crop Zone - South Vijayawada"),
+    ),
+  };
+
+  void _onMapCreated(gmap.GoogleMapController controller) {
+    _mapController = controller;
   }
 
   Future<void> showSiriAssistant(BuildContext context, String t) async {
@@ -285,16 +321,30 @@ class _HomePageState extends State<HomePage> {
                     leading: const Icon(Icons.help),
                     title: Text(drawerHelp),
                     onTap: () {
-                      print("Help tapped");
-                      Navigator.pop(context);
+                      Navigator.pop(context); // close the drawer first
+                      Future.delayed(Duration(milliseconds: 300), () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AboutUsPage(),
+                          ),
+                        );
+                      });
                     },
                   ),
                   ListTile(
                     leading: const Icon(Icons.contact_emergency),
                     title: Text(drawerQuery),
                     onTap: () {
-                      print("Query tapped");
                       Navigator.pop(context);
+                      Future.delayed(Duration(milliseconds: 300), () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ContactUsPage(),
+                          ),
+                        );
+                      });
                     },
                   ),
                   ListTile(
@@ -314,7 +364,11 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Row(
           children: [
-            SizedBox(width: 30),
+            SizedBox(
+              width: Localizations.localeOf(context).languageCode == 'ta'
+                  ? 1.0
+                  : 45.0,
+            ),
             Text(AppLocalizations.of(context)?.appTitle ?? 'Kisan Connect.'),
           ],
         ),
@@ -393,12 +447,13 @@ class _HomePageState extends State<HomePage> {
           SizedBox(
             height: 280,
             child: showMap
-                ? GoogleMap(
+                ? gmap.GoogleMap(
                     onMapCreated: _onMapCreated,
-                    initialCameraPosition: CameraPosition(
+                    initialCameraPosition: gmap.CameraPosition(
                       target: _center,
-                      zoom: 11.0,
+                      zoom: 10.0,
                     ),
+                    markers: _markers,
                   )
                 : CarouselSlider.builder(
                     itemCount: carouselItems.length,
@@ -725,228 +780,443 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+// class ContactUsPage extends StatefulWidget {
+//   @override
+//   _ContactUsPageState createState() => _ContactUsPageState();
+// }
+
+// class _ContactUsPageState extends State<ContactUsPage> {
+//   final _formKey = GlobalKey<FormState>();
+//   bool _showSuccessMessage = false;
+
+//   final _nameController = TextEditingController();
+//   final _emailController = TextEditingController();
+//   final _messageController = TextEditingController();
+
+//   @override
+//   void dispose() {
+//     _nameController.dispose();
+//     _emailController.dispose();
+//     _messageController.dispose();
+//     super.dispose();
+//   }
+
+//   void _submitForm() {
+//     if (_formKey.currentState!.validate()) {
+//       setState(() => _showSuccessMessage = true);
+//       _nameController.clear();
+//       _emailController.clear();
+//       _messageController.clear();
+
+//       Future.delayed(const Duration(seconds: 3), () {
+//         setState(() => _showSuccessMessage = false);
+//       });
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final local = AppLocalizations.of(context)!;
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         backgroundColor: const Color(0xFF0D091E),
+//         title: Row(
+//           children: [
+//             Image.asset('assets/logo.png', width: 35),
+//             const SizedBox(width: 8),
+//             Text(local.appTitle),
+//           ],
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () {
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(builder: (_) => AboutUsPage()),
+//               );
+//             },
+//             child: Text(
+//               local.aboutUs,
+//               style: const TextStyle(color: Colors.white),
+//             ),
+//           ),
+//         ],
+//       ),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.all(20),
+//         child: Column(
+//           children: [
+//             const SizedBox(height: 20),
+//             Text(
+//               local.contactUs,
+//               style: const TextStyle(
+//                 fontSize: 28,
+//                 color: Color(0xFF38be14),
+//                 fontWeight: FontWeight.bold,
+//               ),
+//               textAlign: TextAlign.center,
+//             ),
+//             const SizedBox(height: 30),
+//             Form(
+//               key: _formKey,
+//               child: Column(
+//                 children: [
+//                   buildInputField(
+//                     local.nameLabel,
+//                     _nameController,
+//                     TextInputType.name,
+//                   ),
+//                   const SizedBox(height: 15),
+//                   buildInputField(
+//                     local.emailLabel,
+//                     _emailController,
+//                     TextInputType.emailAddress,
+//                   ),
+//                   const SizedBox(height: 15),
+//                   buildMessageField(local.messageLabel),
+//                   const SizedBox(height: 20),
+//                   Align(
+//                     alignment: Alignment.centerRight,
+//                     child: ElevatedButton(
+//                       onPressed: _submitForm,
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: const Color(0xFF38be14),
+//                       ),
+//                       child: Text(local.sendMessageButton),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//             if (_showSuccessMessage)
+//               Padding(
+//                 padding: const EdgeInsets.only(top: 20),
+//                 child: Container(
+//                   padding: const EdgeInsets.all(15),
+//                   decoration: BoxDecoration(
+//                     color: Colors.green.shade700,
+//                     borderRadius: BorderRadius.circular(8),
+//                   ),
+//                   child: Row(
+//                     children: [
+//                       const Icon(Icons.check_circle, color: Colors.white),
+//                       const SizedBox(width: 10),
+//                       Expanded(
+//                         child: Text(
+//                           local.successMessage,
+//                           style: const TextStyle(color: Colors.white),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ),
+//           ],
+//         ),
+//       ),
+//       bottomNavigationBar: BottomAppBar(
+//         color: const Color(0xFF0D091E),
+//         child: Padding(
+//           padding: const EdgeInsets.all(12.0),
+//           child: Text(
+//             local.footerCopyright,
+//             style: const TextStyle(color: Colors.white),
+//             textAlign: TextAlign.center,
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget buildInputField(
+//     String label,
+//     TextEditingController controller,
+//     TextInputType inputType,
+//   ) {
+//     final local = AppLocalizations.of(context)!;
+
+//     return TextFormField(
+//       controller: controller,
+//       keyboardType: inputType,
+//       style: const TextStyle(color: Colors.white),
+//       decoration: InputDecoration(
+//         filled: true,
+//         fillColor: Colors.white10,
+//         labelText: label,
+//         labelStyle: const TextStyle(color: Colors.white),
+//         hintText: '${local.your} $label',
+//         hintStyle: const TextStyle(color: Colors.white60),
+//         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+//       ),
+//       validator: (value) {
+//         if (value == null || value.trim().isEmpty) {
+//           return '${local.pleaseEnter} $label';
+//         }
+//         return null;
+//       },
+//     );
+//   }
+
+//   Widget buildMessageField(String label) {
+//     final local = AppLocalizations.of(context)!;
+
+//     return TextFormField(
+//       controller: _messageController,
+//       maxLines: 4,
+//       style: const TextStyle(color: Colors.white),
+//       decoration: InputDecoration(
+//         filled: true,
+//         fillColor: Colors.white10,
+//         labelText: label,
+//         labelStyle: const TextStyle(color: Colors.white),
+//         hintText: '${local.your} $label',
+//         hintStyle: const TextStyle(color: Colors.white60),
+//         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+//       ),
+//       validator: (value) {
+//         if (value == null || value.trim().isEmpty) {
+//           return local.pleaseEnterMessage;
+//         }
+//         return null;
+//       },
+//     );
+//   }
+// }
+
 class ContactUsPage extends StatefulWidget {
+  const ContactUsPage({super.key});
+
   @override
-  _ContactUsPageState createState() => _ContactUsPageState();
+  State<ContactUsPage> createState() => _ContactUsPageState();
 }
 
 class _ContactUsPageState extends State<ContactUsPage> {
   final _formKey = GlobalKey<FormState>();
-  bool _showSuccessMessage = false;
-
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
 
+  bool _showSuccess = false;
+
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _showSuccessMessage = true;
-      });
+      setState(() => _showSuccess = true);
       _nameController.clear();
       _emailController.clear();
       _messageController.clear();
+
+      Future.delayed(const Duration(seconds: 3), () {
+        setState(() => _showSuccess = false);
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF141414),
       appBar: AppBar(
-        backgroundColor: Color(0xFF0D091E),
+        backgroundColor: const Color(0xFF0d091e),
         title: Row(
           children: [
-            Image.asset(
-              'assets/logo.png', // Ensure this image exists and is declared in pubspec.yaml
-              width: 35,
-            ),
-            SizedBox(width: 8),
-            Text('Kisan Connect'),
+            Image.asset('assets/logo.png.jpg', width: 35),
+            const SizedBox(width: 8),
+            const Text('Kisan Connect'),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () {}, // Navigate to About Us if needed
-            child: Text('About Us', style: TextStyle(color: Colors.white)),
+            onPressed: () {
+              // Navigate to About Us page if needed
+            },
+            child: const Text(
+              'About Us',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 10),
+            const Text(
               'Contact Us',
               style: TextStyle(
                 fontSize: 28,
-                color: Color(0xFF38be14),
                 fontWeight: FontWeight.bold,
+                color: Color(0xFF38be14),
               ),
-              textAlign: TextAlign.center,
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             Form(
               key: _formKey,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  buildInputField("Name", _nameController, TextInputType.name),
-                  SizedBox(height: 15),
-                  buildInputField(
-                    "Email",
-                    _emailController,
-                    TextInputType.emailAddress,
+                  TextFormField(
+                    controller: _nameController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      hintText: 'Your Name',
+                      labelStyle: TextStyle(color: Colors.white),
+                      hintStyle: TextStyle(color: Colors.white60),
+                      filled: true,
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter your name' : null,
                   ),
-                  SizedBox(height: 15),
-                  buildMessageField(),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 15),
+                  TextFormField(
+                    controller: _emailController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'Your Email',
+                      labelStyle: TextStyle(color: Colors.white),
+                      hintStyle: TextStyle(color: Colors.white60),
+                      filled: true,
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter your email' : null,
+                  ),
+                  const SizedBox(height: 15),
+                  TextFormField(
+                    controller: _messageController,
+                    style: const TextStyle(color: Colors.white),
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      labelText: 'Message',
+                      hintText: 'Your Message',
+                      labelStyle: TextStyle(color: Colors.white),
+                      hintStyle: TextStyle(color: Colors.white60),
+                      filled: true,
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Please enter your message' : null,
+                  ),
+                  const SizedBox(height: 20),
                   Align(
-                    alignment: Alignment.centerRight,
+                    alignment: Alignment.center,
                     child: ElevatedButton(
                       onPressed: _submitForm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF38be14),
+                        backgroundColor: const Color(0xFF38be14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 15,
+                        ),
                       ),
-                      child: Text("Send Message"),
+                      child: const Text('Send Message'),
                     ),
                   ),
+                  if (_showSuccess)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 20),
+                      child: Text(
+                        'Your message has been sent successfully! We will respond soon.',
+                        style: TextStyle(color: Colors.greenAccent),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                 ],
               ),
             ),
-            if (_showSuccessMessage)
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: Container(
-                  padding: EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade700,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.white),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          "Your message has been sent successfully! We will respond soon.",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: Color(0xFF0D091E),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            '© 2025 Kisan Connect. All rights reserved.',
-            style: TextStyle(color: Colors.white),
-            textAlign: TextAlign.center,
-          ),
+      bottomNavigationBar: const Padding(
+        padding: EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Divider(color: Colors.white24),
+            Text(
+              '© 2025 Kisan Connect. All rights reserved.',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget buildInputField(
-    String label,
-    TextEditingController controller,
-    TextInputType inputType,
-  ) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: inputType,
-      style: TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: Colors.white),
-        hintText: 'Your $label',
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'Please enter your $label';
-        return null;
-      },
-    );
-  }
-
-  Widget buildMessageField() {
-    return TextFormField(
-      controller: _messageController,
-      maxLines: 4,
-      style: TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: "Message",
-        labelStyle: TextStyle(color: Colors.white),
-        hintText: 'Your Message',
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'Please enter a message';
-        return null;
-      },
     );
   }
 }
 
-class AboutUsPage extends StatelessWidget {
+class AboutUsPage2 extends StatelessWidget {
+  const AboutUsPage2({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF0D091E),
+        backgroundColor: const Color(0xFF0D091E),
         title: Row(
           children: [
-            Image.asset(
-              'assets/logo.png', // Ensure this image exists in assets folder and is declared in pubspec.yaml
-              width: 35,
-            ),
-            SizedBox(width: 8),
-            Text('Kisan Connect'),
+            Image.asset('assets/logo.png', width: 35),
+            const SizedBox(width: 8),
+            Text(local.appTitle),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () {},
-            child: Text('Contact Us', style: TextStyle(color: Colors.white)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ContactUsPage()),
+              );
+            },
+            child: Text(
+              local.contactUs,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // Hero Section
             Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 70),
-              color: Color(0xCC2E8982),
+              padding: const EdgeInsets.symmetric(vertical: 70),
+              color: const Color(0xCC2E8982),
               child: Column(
                 children: [
                   Text(
-                    'About Us',
-                    style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+                    local.aboutUs,
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
-                    'Learn more about Kisan Connect',
-                    style: TextStyle(fontSize: 18),
+                    local.aboutUsSubtitle,
+                    style: const TextStyle(fontSize: 18),
                   ),
                 ],
               ),
             ),
-
-            // Main Content
             Container(
-              margin: EdgeInsets.symmetric(vertical: 20),
-              padding: EdgeInsets.all(20),
+              margin: const EdgeInsets.symmetric(vertical: 20),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(15),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black54,
                     blurRadius: 15,
@@ -957,40 +1227,30 @@ class AboutUsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SectionHeader('About Kisan Konnect'),
-                  Text(
-                    'We are dedicated to connecting farmers and buyers in a seamless marketplace. Our platform provides a variety of agricultural products and services to meet the needs of our users.',
-                  ),
-                  SizedBox(height: 20),
-                  SectionHeader('Our Mission'),
-                  Text(
-                    'To empower farmers and provide buyers with access to quality agricultural products.',
-                  ),
-                  SizedBox(height: 20),
-                  SectionHeader('Our Vision'),
-                  Text(
-                    'To be the leading online marketplace for agricultural products, fostering sustainable practices and supporting local farmers.',
-                  ),
-                  SizedBox(height: 20),
-                  SectionHeader('Our Values'),
+                  SectionHeader(local.aboutKisanKonnect),
+                  Text(local.aboutDescription),
+                  const SizedBox(height: 20),
+                  SectionHeader(local.ourMission),
+                  Text(local.missionDescription),
+                  const SizedBox(height: 20),
+                  SectionHeader(local.ourVision),
+                  Text(local.visionDescription),
+                  const SizedBox(height: 20),
+                  SectionHeader(local.ourValues),
                   BulletList([
-                    'Integrity: We uphold the highest standards of integrity in all our actions.',
-                    'Customer Focus: We value our customers and strive to meet their needs.',
-                    'Innovation: We embrace change and seek new ways to improve our services.',
-                    'Sustainability: We are committed to promoting sustainable agricultural practices.',
+                    local.valueIntegrity,
+                    local.valueCustomerFocus,
+                    local.valueInnovation,
+                    local.valueSustainability,
                   ]),
                 ],
               ),
             ),
-
-            // Footer
             Column(
               children: [
-                Divider(color: Colors.white24),
-                Text('© 2025 Kisan Connect. All rights reserved.'),
-                Text(
-                  'Customer Support: 9999999999 | Email: customercare@kisankonnect.in',
-                ),
+                const Divider(color: Colors.white24),
+                Text(local.footerCopyright),
+                Text(local.footerSupport),
               ],
             ),
           ],
@@ -998,15 +1258,201 @@ class AboutUsPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Future: Add speech recognition trigger
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Voice command feature not yet implemented"),
+            SnackBar(content: Text(local.voiceCommandNotImplemented)),
+          );
+        },
+        backgroundColor: const Color(0xFFFF4757),
+        child: const Icon(Icons.mic),
+      ),
+    );
+  }
+}
+
+class AboutUsPage extends StatelessWidget {
+  const AboutUsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF141414),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0d091e),
+        title: Row(
+          children: [
+            Image.asset('assets/logo.png.jpg', width: 35),
+            const SizedBox(width: 8),
+            const Text('Kisan Connect'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Add contact navigation here
+            },
+            child: const Text(
+              'Contact Us',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+      body: ListView(
+        children: [
+          // Hero Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 70),
+            color: const Color(0xCC2E8982),
+            child: const Column(
+              children: [
+                Text(
+                  'About Us',
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Learn more about Kisan Connect',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+
+          // Main Content
+          Container(
+            margin: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black54,
+                  blurRadius: 15,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'About Kisan Konnect',
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: Color(0xFF38be14),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'We are dedicated to connecting farmers and buyers in a seamless marketplace. Our platform provides a variety of agricultural products and services to meet the needs of our users.',
+                  style: TextStyle(color: Colors.white),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Our Mission',
+                  style: TextStyle(
+                    fontSize: 22,
+                    color: Color(0xFF38be14),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'To empower farmers and provide buyers with access to quality agricultural products.',
+                  style: TextStyle(color: Colors.white),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Our Vision',
+                  style: TextStyle(
+                    fontSize: 22,
+                    color: Color(0xFF38be14),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'To be the leading online marketplace for agricultural products, fostering sustainable practices and supporting local farmers.',
+                  style: TextStyle(color: Colors.white),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Our Values',
+                  style: TextStyle(
+                    fontSize: 22,
+                    color: Color(0xFF38be14),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Padding(
+                  padding: EdgeInsets.only(left: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '• Integrity: We uphold the highest standards of integrity in all our actions.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        '• Customer Focus: We value our customers and strive to meet their needs.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        '• Innovation: We embrace change and seek new ways to improve our services.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        '• Sustainability: We are committed to promoting sustainable agricultural practices.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Footer
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              children: [
+                Divider(color: Colors.white24),
+                Text(
+                  '© 2025 Kisan Connect. All rights reserved.',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Customer Support: 9999999999 | Email: customercare@kisankonnect.in',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Voice assistant feature coming soon!"),
             ),
           );
         },
-        backgroundColor: Color(0xFFFF4757),
-        child: Icon(Icons.mic),
+        backgroundColor: const Color(0xFFFF4757),
+        child: const Icon(Icons.mic),
       ),
     );
   }
@@ -1014,39 +1460,32 @@ class AboutUsPage extends StatelessWidget {
 
 class SectionHeader extends StatelessWidget {
   final String text;
-  SectionHeader(this.text);
+  const SectionHeader(this.text, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: TextStyle(
-        fontSize: 24,
-        color: Color(0xFF38BE14),
-        fontWeight: FontWeight.bold,
-      ),
+      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
     );
   }
 }
 
 class BulletList extends StatelessWidget {
   final List<String> items;
-  BulletList(this.items);
+  const BulletList(this.items, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: items
           .map(
-            (e) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("• ", style: TextStyle(fontSize: 18)),
-                  Expanded(child: Text(e)),
-                ],
-              ),
+            (item) => Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('• ', style: TextStyle(fontSize: 18)),
+                Expanded(child: Text(item)),
+              ],
             ),
           )
           .toList(),
@@ -1055,26 +1494,63 @@ class BulletList extends StatelessWidget {
 }
 
 class FarmerDashboard extends StatelessWidget {
-  Widget buildDashboardCard(
-    Map<String, String> item,
-    BuildContext context,
-    bool isTablet,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        if (item['title'] == 'Market Trends') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => AgricultureTrendsPage()),
-          );
-        } else if (item['title'] == 'Weather Updates') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => WeatherMarketPage()),
-          );
-        }
+  const FarmerDashboard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final isTablet = width > 600;
+    final local = AppLocalizations.of(context)!;
+
+    // Localization variables
+    final String welcomeMessage = local.welcomeMessage;
+    final String appTitle = local.appTitle;
+    final String welcomeSubtitle = local.welcomeSubtitle;
+    final String searchHint = local.searchHint;
+
+    final String equipmentRentals = local.equipmentRentals;
+    final String marketTrends = local.marketTrends;
+    final String weatherUpdates = local.weatherUpdates;
+
+    final String testimonialTitle = local.testimonialTitle;
+    final String testimonial11 = local.testimonial11;
+    final String testimonial11Author = local.testimonial11Author;
+    final String testimonial22 = local.testimonial22;
+    final String testimonial22Author = local.testimonial22Author;
+    final String testimonial33 = local.testimonial33;
+    final String testimonial33Author = local.testimonial33Author;
+
+    final String footerCopyright = local.footerCopyright;
+    final String footerSupport = local.footerSupport;
+
+    // Dashboard cards data
+    final List<Map<String, String>> dashboardItems = [
+      {
+        'title': equipmentRentals,
+        'image': 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9',
+        'icon': '🛠️',
       },
-      child: Container(
+      {
+        'title': marketTrends,
+        'image': 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae',
+        'icon': '📈',
+      },
+      {
+        'title': weatherUpdates,
+        'image': 'https://images.unsplash.com/photo-1601134467661-3d775b999c8b',
+        'icon': '🌤️',
+      },
+    ];
+
+    final List<Map<String, String>> testimonials = [
+      {'text': testimonial11, 'author': testimonial11Author},
+      {'text': testimonial22, 'author': testimonial22Author},
+      {'text': testimonial33, 'author': testimonial33Author},
+    ];
+
+    Widget buildDashboardCard(Map<String, String> item, bool isTablet) {
+      return Container(
         height: isTablet ? 180 : 150,
         margin: EdgeInsets.only(bottom: isTablet ? 24 : 16),
         decoration: BoxDecoration(
@@ -1087,7 +1563,7 @@ class FarmerDashboard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(isTablet ? 30 : 20),
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [Color(0xE509A745), Color(0xE5ACB5B4)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -1112,123 +1588,93 @@ class FarmerDashboard extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  final List<Map<String, String>> dashboardItems = [
-    {
-      'title': 'Equipment Rentals',
-      'image': 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9',
-      'icon': '🛠️',
-    },
-    {
-      'title': 'Market Trends',
-      'image': 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae',
-      'icon': '📈',
-    },
-    {
-      'title': 'Weather Updates',
-      'image': 'https://images.unsplash.com/photo-1601134467661-3d775b999c8b',
-      'icon': '🌤️',
-    },
-  ];
+    void handleCardTap(String title) {
+      print("Tapped on: $title");
 
-  final List<Map<String, String>> testimonials = [
-    {
-      'text':
-          '"Kisan Connect has transformed my farming experience. The quality of produce is exceptional!"',
-      'author': '— Rajesh Kumar, Farmer',
-    },
-    {
-      'text':
-          '"I love the convenience of ordering fresh fruits and vegetables online. Highly recommend!"',
-      'author': '— Anita Sharma, Customer',
-    },
-    {
-      'text':
-          '"The support from Kisan Connect has been invaluable. They truly care about farmers!"',
-      'author': '— Suresh Patel, Farmer',
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final width = size.width;
-    final isTablet = width > 600;
+      if (title == equipmentRentals) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const EquipmentRentalPage()),
+        );
+      } else if (title == marketTrends) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AgricultureTrendsPage()),
+        );
+      } else if (title == weatherUpdates) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const WeatherMarketPage()),
+        );
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF0d091e),
+        backgroundColor: const Color(0xFF0d091e),
         title: Row(
           children: [
-            SizedBox(width: isTablet ? 20 : 20),
+            SizedBox(
+              width: Localizations.localeOf(context).languageCode == 'ta'
+                  ? 15.0
+                  : 45.0,
+            ),
             Text(
-              'Kisan Connect',
-              style: TextStyle(fontSize: isTablet ? 30 : 30),
+              appTitle,
+              style: TextStyle(
+                fontSize: Localizations.localeOf(context).languageCode == 'ta'
+                    ? 22.0
+                    : 25.0,
+              ),
             ),
           ],
         ),
       ),
       body: ListView(
         children: [
-          // Header Section
+          // 🟢 Header Section
           Container(
             padding: EdgeInsets.symmetric(vertical: isTablet ? 120 : 80),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0x700aed61), Color(0x1c06b26a)],
               ),
             ),
-            child: Builder(
-              builder: (context) {
-                final screenWidth = MediaQuery.of(context).size.width;
-                final screenHeight = MediaQuery.of(context).size.height;
-
-                final isTablet = screenWidth > 600;
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Welcome to Kisan Connect",
-                      style: TextStyle(
-                        fontSize:
-                            screenWidth *
-                            0.06, // ~24px on phones, 36+ on tablets
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      "Empowering Farmers with Technology",
-                      style: TextStyle(
-                        fontSize:
-                            screenWidth * 0.045, // ~16–22 depending on screen
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                );
-              },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  welcomeMessage,
+                  style: TextStyle(
+                    fontSize: width * 0.06,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  welcomeSubtitle,
+                  style: TextStyle(fontSize: width * 0.045),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
 
-          // Search Bar
+          // 🟢 Search Bar
           Padding(
-            padding: EdgeInsets.all(
-              24,
-            ), // Reduced padding for a more compact look
+            padding: const EdgeInsets.all(24),
             child: TextField(
-              style: TextStyle(color: Colors.black, fontSize: 18),
+              style: const TextStyle(color: Colors.black, fontSize: 18),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Color.fromARGB(255, 221, 216, 216),
-                hintText: 'Search...',
-                hintStyle: TextStyle(color: Colors.black54, fontSize: 18),
-                contentPadding: EdgeInsets.symmetric(
+                fillColor: const Color.fromARGB(255, 221, 216, 216),
+                hintText: searchHint,
+                hintStyle: const TextStyle(color: Colors.black54, fontSize: 18),
+                contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
@@ -1236,16 +1682,16 @@ class FarmerDashboard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: Icon(
+                prefixIcon: const Icon(
                   Icons.search,
                   color: Colors.black,
-                  size: 22, // Smaller icon
+                  size: 22,
                 ),
               ),
             ),
           ),
 
-          // Dashboard Grid
+          // 🟢 Dashboard Cards
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: isTablet ? 32 : 16,
@@ -1253,103 +1699,52 @@ class FarmerDashboard extends StatelessWidget {
             ),
             child: Column(
               children: [
-                // Full-width first item
+                // Full-width Equipment Rental Card
                 GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EquipmentRentalPage(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    height: isTablet ? 220 : 180,
-                    margin: EdgeInsets.only(bottom: isTablet ? 24 : 16),
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(dashboardItems[0]['image']!),
-                        fit: BoxFit.cover,
-                      ),
-                      borderRadius: BorderRadius.circular(isTablet ? 30 : 20),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(isTablet ? 30 : 20),
-                        gradient: LinearGradient(
-                          colors: [Color(0xE509A745), Color(0xE5ACB5B4)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              dashboardItems[0]['icon']!,
-                              style: TextStyle(fontSize: isTablet ? 48 : 32),
-                            ),
-                            Text(
-                              dashboardItems[0]['title']!,
-                              style: TextStyle(
-                                fontSize: isTablet ? 26 : 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                  onTap: () => handleCardTap(dashboardItems[0]['title']!),
+                  child: buildDashboardCard(dashboardItems[0], isTablet),
                 ),
+                const SizedBox(height: 8),
 
-                // Remaining items in 2-column layout
-                for (int i = 1; i < dashboardItems.length; i += 2)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: buildDashboardCard(
-                          dashboardItems[i],
-                          context,
-                          isTablet,
-                        ),
+                // Row with 2-column layout for Market Trends and Weather Updates
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => handleCardTap(dashboardItems[1]['title']!),
+                        child: buildDashboardCard(dashboardItems[1], isTablet),
                       ),
-                      SizedBox(width: isTablet ? 24 : 16),
-                      if (i + 1 < dashboardItems.length)
-                        Expanded(
-                          child: buildDashboardCard(
-                            dashboardItems[i + 1],
-                            context,
-                            isTablet,
-                          ),
-                        ),
-                      if (i + 1 >= dashboardItems.length)
-                        Expanded(child: SizedBox()), // Empty space if odd count
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => handleCardTap(dashboardItems[2]['title']!),
+                        child: buildDashboardCard(dashboardItems[2], isTablet),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
 
-          // Testimonials
+          // 🟢 Testimonials Section
           Container(
-            color: Color(0xFF2c2c2c),
+            color: const Color(0xFF2c2c2c),
             padding: EdgeInsets.all(isTablet ? 40 : 24),
             child: Column(
               children: [
                 Text(
-                  "Testimonials",
+                  testimonialTitle,
                   style: TextStyle(
                     fontSize: isTablet ? 32 : 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: isTablet ? 30 : 20),
+                const SizedBox(height: 20),
                 ...testimonials.map(
                   (t) => Card(
-                    color: Color(0xFF1a1a1a),
+                    color: const Color(0xFF1a1a1a),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(isTablet ? 30 : 20),
                     ),
@@ -1379,18 +1774,18 @@ class FarmerDashboard extends StatelessWidget {
             ),
           ),
 
-          // Footer
+          // 🟢 Footer Section
           Container(
-            color: Color(0xFF0d091e),
+            color: const Color(0xFF0d091e),
             padding: EdgeInsets.all(isTablet ? 32 : 20),
             child: Column(
               children: [
                 Text(
-                  "© 2025 Kisan Connect. All rights reserved.",
+                  footerCopyright,
                   style: TextStyle(fontSize: isTablet ? 18 : 14),
                 ),
                 Text(
-                  "Customer Support: 1800 267 0997 | Email: customercare@kisanconnect.in",
+                  footerSupport,
                   style: TextStyle(fontSize: isTablet ? 16 : 12),
                 ),
               ],
@@ -1403,49 +1798,59 @@ class FarmerDashboard extends StatelessWidget {
 }
 
 class EquipmentRentalPage extends StatefulWidget {
+  const EquipmentRentalPage({super.key});
+
   @override
   _EquipmentRentalPageState createState() => _EquipmentRentalPageState();
 }
 
 class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
-  final List<Map<String, String>> equipmentData = [
-    {
-      'name': 'Tractor',
-      'category': 'tractors',
-      'location': 'Maharashtra',
-      'duration': 'daily',
-      'availability': 'Available',
-      'image': 'assets/tractor.jpg',
-    },
-    {
-      'name': 'Harvester',
-      'category': 'harvesters',
-      'location': 'Uttar Pradesh',
-      'duration': 'weekly',
-      'availability': 'Available',
-      'image': 'assets/harvester.jpg',
-    },
-    {
-      'name': 'Sprayer',
-      'category': 'sprayers',
-      'location': 'Karnataka',
-      'duration': 'daily',
-      'availability': 'Available',
-      'image': 'assets/sprayer.jpg',
-    },
-    {
-      'name': 'Seeder',
-      'category': 'seeders',
-      'location': 'Gujarat',
-      'duration': 'daily',
-      'availability': 'Available',
-      'image': 'assets/seeder.jpg',
-    },
-  ];
+  late List<Map<String, String>> equipmentData;
 
   String selectedCategory = 'all';
   String selectedDuration = 'all';
   String locationQuery = '';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final local = AppLocalizations.of(context)!;
+
+    equipmentData = [
+      {
+        'name': local.equipmentTractor,
+        'category': 'tractors',
+        'location': local.locationMaharashtra,
+        'duration': 'daily',
+        'availability': local.availabilityAvailable,
+        'image': 'assets/tractor.jpg',
+      },
+      {
+        'name': local.equipmentHarvester,
+        'category': 'harvesters',
+        'location': local.locationUttarPradesh,
+        'duration': 'weekly',
+        'availability': local.availabilityAvailable,
+        'image': 'assets/harvester.jpg',
+      },
+      {
+        'name': local.equipmentSprayer,
+        'category': 'sprayers',
+        'location': local.locationKarnataka,
+        'duration': 'daily',
+        'availability': local.availabilityAvailable,
+        'image': 'assets/sprayer.jpg',
+      },
+      {
+        'name': local.equipmentSeeder,
+        'category': 'seeders',
+        'location': local.locationGujarat,
+        'duration': 'daily',
+        'availability': local.availabilityAvailable,
+        'image': 'assets/seeder.jpg',
+      },
+    ];
+  }
 
   List<Map<String, String>> get filteredEquipment {
     return equipmentData.where((item) {
@@ -1460,15 +1865,16 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
   }
 
   void showBookingDialog(String name) {
+    final local = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Booking Confirmation'),
-        content: Text('You have successfully booked the $name.'),
+        title: Text(local.bookingConfirmationTitle),
+        content: Text(local.bookingConfirmationMessage(name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(local.close),
           ),
         ],
       ),
@@ -1477,6 +1883,7 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
     final size = MediaQuery.of(context).size;
     final width = size.width;
     final isTablet = width > 600;
@@ -1485,23 +1892,17 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 10, 176, 168),
         title: Text(
-          'Kisan Connect',
+          local.appTitle,
           style: TextStyle(fontSize: isTablet ? 28 : 24),
         ),
         actions: [
           PopupMenuButton<int>(
             icon: const Icon(Icons.more_vert),
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 1, child: Text('About Us')),
-              PopupMenuItem(value: 2, child: Text('Contact Us')),
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 1, child: Text(local.aboutUs)),
+              PopupMenuItem(value: 2, child: Text(local.contactUs)),
             ],
-            onSelected: (value) {
-              if (value == 1) {
-                // Navigator.push(context, MaterialPageRoute(builder: (_) => AboutUsPage()));
-              } else if (value == 2) {
-                // Navigator.push(context, MaterialPageRoute(builder: (_) => ContactUsPage()));
-              }
-            },
+            onSelected: (value) {},
           ),
         ],
       ),
@@ -1515,14 +1916,17 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
-              children: const [
+              children: [
                 Text(
-                  'Welcome to Equipment Rental',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  local.equipmentWelcomeTitle,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
-                  'Rent farming machinery at affordable prices.',
+                  local.equipmentWelcomeSubtitle,
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -1539,22 +1943,18 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Select',
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  Text(
+                    local.select,
+                    style: const TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
                     value: selectedCategory,
                     items:
-                        [
-                              'all',
-                              'tractors',
-                              'harvesters',
-                              'sprayers',
-                              'irrigation',
-                              'seeders',
-                            ]
+                        ['all', 'tractors', 'harvesters', 'sprayers', 'seeders']
                             .map(
                               (e) => DropdownMenuItem(
                                 value: e,
@@ -1566,11 +1966,11 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
                             .toList(),
                     onChanged: (val) =>
                         setState(() => selectedCategory = val ?? 'all'),
-                    decoration: const InputDecoration(labelText: 'Category'),
+                    decoration: InputDecoration(labelText: local.categoryLabel),
                   ),
                   const SizedBox(height: 10),
                   TextField(
-                    decoration: const InputDecoration(labelText: 'Location'),
+                    decoration: InputDecoration(labelText: local.locationLabel),
                     onChanged: (val) => setState(() => locationQuery = val),
                   ),
                   const SizedBox(height: 10),
@@ -1586,8 +1986,8 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
                         .toList(),
                     onChanged: (val) =>
                         setState(() => selectedDuration = val ?? 'all'),
-                    decoration: const InputDecoration(
-                      labelText: 'Rental Duration',
+                    decoration: InputDecoration(
+                      labelText: local.rentalDurationLabel,
                     ),
                   ),
                 ],
@@ -1595,9 +1995,9 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Available Equipment',
-            style: TextStyle(
+          Text(
+            local.availableEquipment,
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.greenAccent,
@@ -1633,9 +2033,9 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
                         ),
                       ),
                       Text(
-                        'Availability: ${item['availability'] ?? 'Unknown'}',
+                        '${local.availabilityLabel}: ${item['availability'] ?? ''}',
                       ),
-                      Text('Location: ${item['location'] ?? 'Unknown'}'),
+                      Text('${local.locationLabel}: ${item['location'] ?? ''}'),
                       const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: () =>
@@ -1643,7 +2043,7 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                         ),
-                        child: const Text('Book Now'),
+                        child: Text(local.bookNow),
                       ),
                     ],
                   ),
@@ -1656,15 +2056,9 @@ class _EquipmentRentalPageState extends State<EquipmentRentalPage> {
           Center(
             child: Column(
               children: [
-                const Text('© 2025 Kisan Connect. All rights reserved.'),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('Privacy Policy'),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('Terms of Service'),
-                ),
+                Text(local.footerCopyright),
+                TextButton(onPressed: () {}, child: Text(local.privacyPolicy)),
+                TextButton(onPressed: () {}, child: Text(local.termsOfService)),
               ],
             ),
           ),
@@ -1683,34 +2077,56 @@ class WeatherMarketPage extends StatefulWidget {
 
 class _WeatherMarketPageState extends State<WeatherMarketPage> {
   final TextEditingController searchController = TextEditingController();
-  final List<Map<String, String>> crops = [
-    {
-      'name': 'Tomato',
-      'description':
-          'Tomatoes are widely grown in India. They require warm weather and well-drained soil.',
-      'image': 'https://via.placeholder.com/40',
-    },
-    {
-      'name': 'Rice',
-      'description':
-          'Rice is a staple food in India. It requires a lot of water and grows well in tropical climates.',
-      'image': 'https://via.placeholder.com/40',
-    },
-    {
-      'name': 'Wheat',
-      'description':
-          'Wheat is a major crop in India. It grows well in cool climates and requires moderate rainfall.',
-      'image': 'https://via.placeholder.com/40',
-    },
+  late List<Map<String, String>> filteredCrops;
+
+  final List<String> cities = [
+    'Pune,India',
+    'Vijayawada,India',
+    'Hyderabad,India',
+    'Delhi,India',
+    'Bangalore,India',
   ];
 
-  List<Map<String, String>> filteredCrops = [];
+  String selectedCity = 'Pune,India';
+  Map<String, String> weatherData = {
+    'temp': '--',
+    'humidity': '--',
+    'rainfall': '--',
+    'wind': '--',
+    'uv': '--',
+  };
 
   @override
   void initState() {
     super.initState();
-    filteredCrops = crops;
+    filteredCrops = [];
+    fetchWeather();
+    initCrops();
   }
+
+  void initCrops() {
+    crops = [
+      {
+        'name': 'Tomato',
+        'description': 'Default description',
+        'image': 'https://via.placeholder.com/40',
+      },
+      {
+        'name': 'Rice',
+        'description': 'Default description',
+        'image': 'https://via.placeholder.com/40',
+      },
+      {
+        'name': 'Wheat',
+        'description': 'Default description',
+        'image': 'https://via.placeholder.com/40',
+      },
+    ];
+    filteredCrops = List<Map<String, String>>.from(crops);
+  }
+
+  List<Map<String, String>> crops = [];
+  late String close;
 
   void onSearch(String query) {
     setState(() {
@@ -1731,11 +2147,37 @@ class _WeatherMarketPageState extends State<WeatherMarketPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(close),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> fetchWeather() async {
+    final apiKey = '67945eb269d49f8603f2d1202b4da427';
+    final city = selectedCity.split(',')[0];
+    final url =
+        'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey&units=metric';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      final data = jsonDecode(response.body);
+
+      setState(() {
+        weatherData = {
+          'temp': '${data['main']['temp']}°C',
+          'humidity': '${data['main']['humidity']}%',
+          'rainfall': data['rain'] != null
+              ? '${data['rain']['1h'] ?? 0} mm'
+              : '0 mm',
+          'wind': '${data['wind']['speed']} m/s',
+          'uv': 'N/A', // You can get UV from separate API if needed
+        };
+      });
+    } catch (e) {
+      print("Weather fetch failed: $e");
+    }
   }
 
   Widget buildDataTable(
@@ -1760,14 +2202,6 @@ class _WeatherMarketPageState extends State<WeatherMarketPage> {
           const SizedBox(height: 10),
           Table(
             border: TableBorder.all(color: Colors.black87),
-            columnWidths: const {
-              0: FlexColumnWidth(),
-              1: FlexColumnWidth(),
-              2: FlexColumnWidth(),
-              3: FlexColumnWidth(),
-              4: FlexColumnWidth(),
-              5: FlexColumnWidth(),
-            },
             children: [
               TableRow(
                 children: headers
@@ -1803,6 +2237,10 @@ class _WeatherMarketPageState extends State<WeatherMarketPage> {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
+    close = local.close;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF0d091e),
@@ -1810,14 +2248,81 @@ class _WeatherMarketPageState extends State<WeatherMarketPage> {
           children: [
             Image.asset('assets/logo.png.jpg', width: 35),
             const SizedBox(width: 8),
-            const Text('Kisan Connect'),
+            Text(local.weatherPageTitle),
           ],
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Search Bar
+          // 🔽 City Dropdown
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.location_on, color: Colors.white),
+              const SizedBox(width: 8),
+              DropdownButton<String>(
+                dropdownColor: Colors.grey[900],
+                value: selectedCity,
+                style: const TextStyle(color: Colors.white),
+                items: cities
+                    .map(
+                      (city) =>
+                          DropdownMenuItem(value: city, child: Text(city)),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedCity = value;
+                    });
+                    fetchWeather();
+                  }
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // 🌡️ Weather Table
+          buildDataTable(
+            local.currentWeatherTitle,
+            [
+              [
+                selectedCity,
+                weatherData['temp'] ?? '--',
+                weatherData['humidity'] ?? '--',
+                weatherData['rainfall'] ?? '--',
+                weatherData['wind'] ?? '--',
+                weatherData['uv'] ?? '--',
+              ],
+            ],
+            [
+              local.location,
+              local.temperature,
+              local.humidity,
+              local.rainfall,
+              local.windSpeed,
+              local.uvIndex,
+            ],
+          ),
+
+          buildDataTable(
+            local.seasonalForecastTitle,
+            [
+              ['25-30°C', '150 mm', 'Low'],
+            ],
+            [
+              local.expectedTemperature,
+              local.rainfallForecast,
+              local.frostRisk,
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // 🔍 Search Crops
           Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -1826,7 +2331,7 @@ class _WeatherMarketPageState extends State<WeatherMarketPage> {
                 onChanged: onSearch,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Search for a crop...',
+                  hintText: local.searchCropHint,
                   hintStyle: const TextStyle(color: Colors.white54),
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
@@ -1843,7 +2348,7 @@ class _WeatherMarketPageState extends State<WeatherMarketPage> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black26,
                         blurRadius: 4,
@@ -1868,38 +2373,17 @@ class _WeatherMarketPageState extends State<WeatherMarketPage> {
                 ),
             ],
           ),
-
-          buildDataTable(
-            'Current Weather Conditions',
-            [
-              ['Pune, India', '28°C', '65%', '0 mm', '10 km/h', '5'],
-            ],
-            [
-              'Location',
-              'Temperature',
-              'Humidity',
-              'Rainfall',
-              'Wind Speed',
-              'UV Index',
-            ],
-          ),
-
-          buildDataTable(
-            'Seasonal Forecast',
-            [
-              ['25-30°C', '150 mm', 'Low'],
-            ],
-            ['Expected Temperature', 'Rainfall Forecast', 'Frost Risk'],
-          ),
-
-          const SizedBox(height: 20),
-          const Center(
-            child: Text('© 2025 Kisan Connect. All rights reserved.'),
-          ),
         ],
       ),
     );
   }
+}
+
+class EquipmentViewScreen extends StatefulWidget {
+  const EquipmentViewScreen({super.key});
+
+  @override
+  State<EquipmentViewScreen> createState() => _EquipmentViewScreenState();
 }
 
 class AgricultureTrendsPage extends StatefulWidget {
@@ -1977,66 +2461,82 @@ class _AgricultureTrendsPageState extends State<AgricultureTrendsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final width = size.width;
-    final isTablet = width > 600;
+    final local = AppLocalizations.of(context)!;
+
+    // Localization values
+    String appTitle = local.appTitle;
+    String contactUs = local.contactUs;
+    String trends = local.trends;
+
+    String agricultureTitle = local.agricultureTitle;
+    String agricultureContent = local.agricultureContent;
+    String importanceTitle = local.importanceTitle;
+    String importanceContent = local.importanceContent;
+    String challengesTitle = local.challengesTitle;
+    String challengesContent = local.challengesContent;
+
+    String fruitsButton = local.fruitsButton;
+    String vegetablesButton = local.vegetablesButton;
+    String searchPlaceholder = local.searchPlaceholder;
+
+    String fruitsAndPrices = local.fruitsAndPrices;
+    String vegetablesAndPrices = local.vegetablesAndPrices;
+    String tableName = local.tableName;
+    String tablePrice = local.tablePrice;
+    String tableSeason = local.tableSeason;
+    String tableBenefit = local.tableBenefit;
+
+    String samplePriceTrends = local.samplePriceTrends;
+    String footerCopyright = local.footerCopyright;
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF0d091e),
-        title: const Text('Kisan Connect'),
+        title: Text(appTitle),
         actions: [
           TextButton(
             onPressed: () {},
-            child: const Text('Trends', style: TextStyle(color: Colors.amber)),
+            child: Text(trends, style: const TextStyle(color: Colors.amber)),
           ),
           TextButton(
             onPressed: () {},
-            child: const Text(
-              'Contact Us',
-              style: TextStyle(color: Colors.amber),
-            ),
+            child: Text(contactUs, style: const TextStyle(color: Colors.amber)),
           ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _sectionBox(
-            'Agriculture Industry in India',
-            'The Indian agriculture industry plays a critical role in the nation\'s economy...',
-          ),
-          _sectionBox(
-            'Importance of Agriculture',
-            'Agriculture contributes significantly to GDP and supports various industries...',
-          ),
-          _sectionBox(
-            'Challenges Faced',
-            'Challenges include climate change, water scarcity, and price fluctuations...',
-          ),
+          _sectionBox(agricultureTitle, agricultureContent),
+          _sectionBox(importanceTitle, importanceContent),
+          _sectionBox(challengesTitle, challengesContent),
+
+          // Fruits/Vegetables toggle
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
                 onPressed: () => setState(() => showFruits = true),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: const Text('Fruits'),
+                child: Text(fruitsButton),
               ),
               const SizedBox(width: 10),
               ElevatedButton(
                 onPressed: () => setState(() => showFruits = false),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: const Text('Vegetables'),
+                child: Text(vegetablesButton),
               ),
             ],
           ),
+
+          // Search
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: TextField(
               onChanged: (value) => setState(() => searchQuery = value),
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: 'Search for a fruit or vegetable...',
+                hintText: searchPlaceholder,
                 hintStyle: const TextStyle(color: Colors.white54),
                 filled: true,
                 fillColor: Colors.white10,
@@ -2047,10 +2547,10 @@ class _AgricultureTrendsPageState extends State<AgricultureTrendsPage> {
               ),
             ),
           ),
+
+          // Table
           Text(
-            showFruits
-                ? 'Fruits and Their Prices'
-                : 'Vegetables and Their Prices',
+            showFruits ? fruitsAndPrices : vegetablesAndPrices,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -2067,34 +2567,34 @@ class _AgricultureTrendsPageState extends State<AgricultureTrendsPage> {
               3: FlexColumnWidth(3),
             },
             children: [
-              const TableRow(
+              TableRow(
                 children: [
                   Padding(
-                    padding: EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     child: Text(
-                      'Name',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      tableName,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     child: Text(
-                      'Price',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      tablePrice,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     child: Text(
-                      'Season',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      tableSeason,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     child: Text(
-                      'Benefit',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      tableBenefit,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -2123,10 +2623,13 @@ class _AgricultureTrendsPageState extends State<AgricultureTrendsPage> {
               ),
             ],
           ),
+
           const SizedBox(height: 30),
-          const Text(
-            'Price Trends (Sample)',
-            style: TextStyle(
+
+          // Chart
+          Text(
+            samplePriceTrends,
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.greenAccent,
@@ -2179,10 +2682,9 @@ class _AgricultureTrendsPageState extends State<AgricultureTrendsPage> {
               ),
             ),
           ),
+
           const SizedBox(height: 20),
-          const Center(
-            child: Text('© 2025 Kisan Connect. All rights reserved.'),
-          ),
+          Center(child: Text(footerCopyright)),
         ],
       ),
     );
@@ -2211,53 +2713,24 @@ class _AgricultureTrendsPageState extends State<AgricultureTrendsPage> {
   }
 }
 
-class EquipmentViewScreen extends StatefulWidget {
-  const EquipmentViewScreen({super.key});
-
-  @override
-  State<EquipmentViewScreen> createState() => _EquipmentViewScreenState();
-}
-
 class _EquipmentViewScreenState extends State<EquipmentViewScreen> {
-  final List<EquipmentItem> items = [
-    EquipmentItem(
-      'What is the best tractor for small-scale farming?',
-      'Compact tractors like the John Deere 1025R or Kubota BX Series are popular choices. They combine reliability with flexible attachments and are designed for small acreage or hobby farms.',
-    ),
-    EquipmentItem(
-      'How do I maintain my agricultural tools?',
-      'Keep your tools clean after each use, oil any moving parts, and store them in a cool, dry space. Regular maintenance ensures longevity and optimal performance.',
-    ),
-    EquipmentItem(
-      'What is the lifespan of a plowing blade?',
-      'Plowing blades last between 3 to 5 years under regular use. Their durability depends on soil type, operational care, and timely inspections for wear and tear.',
-    ),
-    EquipmentItem(
-      'Can I use the same equipment for different crops?',
-      'Yes, many machines are designed for versatility. However, adjustments or recalibrations may be necessary to meet the requirements of specific crops.',
-    ),
-    EquipmentItem(
-      'What safety precautions should I take when using power tools?',
-      'Always wear protective gear such as gloves, goggles, and boots. Avoid distractions, follow the manufacturer\'s guide, and inspect the tools before every use.',
-    ),
-    EquipmentItem(
-      'How often should I service my tractor?',
-      'Tractors need servicing every 200-250 operational hours or once annually. Routine checks include oil changes, belt inspections, and filter replacements.',
-    ),
-    EquipmentItem(
-      'What is the best way to sharpen a sickle or scythe?',
-      'Use a fine-grit sharpening stone and maintain consistent blade angles. Regular sharpening after each use ensures precise and efficient cuts in the field.',
-    ),
-    EquipmentItem(
-      'Are electric tools better than manual ones for gardening?',
-      'Electric tools save time and reduce effort in larger tasks, but manual tools often offer better control. Choose based on the specific demands of your gardening project.',
-    ),
-  ];
-
   String searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
+    final List<EquipmentItem> items = [
+      EquipmentItem(local.equipmentQ1, local.equipmentA1),
+      EquipmentItem(local.equipmentQ2, local.equipmentA2),
+      EquipmentItem(local.equipmentQ3, local.equipmentA3),
+      EquipmentItem(local.equipmentQ4, local.equipmentA4),
+      EquipmentItem(local.equipmentQ5, local.equipmentA5),
+      EquipmentItem(local.equipmentQ6, local.equipmentA6),
+      EquipmentItem(local.equipmentQ7, local.equipmentA7),
+      EquipmentItem(local.equipmentQ8, local.equipmentA8),
+    ];
+
     final filteredItems = items
         .where(
           (item) =>
@@ -2286,9 +2759,9 @@ class _EquipmentViewScreenState extends State<EquipmentViewScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
-                  "Equipment FAQ's",
-                  style: TextStyle(
+                Text(
+                  local.equipmentFaqTitle,
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -2298,7 +2771,7 @@ class _EquipmentViewScreenState extends State<EquipmentViewScreen> {
                 TextField(
                   onChanged: (value) => setState(() => searchQuery = value),
                   decoration: InputDecoration(
-                    hintText: 'Search FAQs...',
+                    hintText: local.equipmentSearchHint,
                     prefixIcon: const Icon(Icons.search),
                     filled: true,
                     fillColor: Colors.grey[200],
@@ -2351,6 +2824,18 @@ class EquipmentItem {
   EquipmentItem(this.question, this.answer);
 }
 
+class CropsItem {
+  final String category;
+  final String question;
+  final String answer;
+
+  CropsItem({
+    required this.category,
+    required this.question,
+    required this.answer,
+  });
+}
+
 class CropsViewScreen extends StatefulWidget {
   const CropsViewScreen({super.key});
 
@@ -2359,78 +2844,73 @@ class CropsViewScreen extends StatefulWidget {
 }
 
 class _CropsViewScreenState extends State<CropsViewScreen> {
-  final List<CropsItem> faqItems = [
-    CropsItem(
-      category: 'Buyers',
-      question: 'What crops are available on the website?',
-      answer:
-          'We offer a variety of crops, including fruits (mangoes, apples), vegetables (potatoes, tomatoes), dairy products, poultry products, and exotic vegetables like broccoli and lettuce.',
-    ),
-    CropsItem(
-      category: 'Buyers',
-      question: 'How do I place an order?',
-      answer:
-          'To place an order, browse through our product catalog, add items to your cart, and proceed to checkout with your shipping and payment details.',
-    ),
-    CropsItem(
-      category: 'Buyers',
-      question: 'Are products on the website organic?',
-      answer:
-          'We provide both organic and non-organic options. Organic products are clearly labeled, and you can filter for them in the product catalog.',
-    ),
-    CropsItem(
-      category: 'Buyers',
-      question: 'What if I receive damaged or low-quality produce?',
-      answer:
-          'If you receive damaged or unsatisfactory produce, please contact customer support within 24 hours of delivery. We offer refunds or replacements.',
-    ),
-    CropsItem(
-      category: 'Buyers',
-      question: 'Do you deliver nationwide?',
-      answer:
-          'Yes, we deliver across India. Delivery times vary based on location and product type. Estimated delivery dates are provided at checkout.',
-    ),
-    CropsItem(
-      category: 'Farmers',
-      question: 'How do I list my crops on the website?',
-      answer:
-          'To list your crops, create a farmer account, upload details about your produce, including type, quantity, and price, and wait for approval from our team.',
-    ),
-    CropsItem(
-      category: 'Farmers',
-      question: 'Are there any fees for selling on this platform?',
-      answer:
-          'We charge a small commission on each sale. There are no upfront fees for listing your products, and detailed terms are shared during onboarding.',
-    ),
-    CropsItem(
-      category: 'Farmers',
-      question: 'How will I get paid for my sales?',
-      answer:
-          'Payments are made directly to your registered bank account within 7 days of successful delivery and customer satisfaction.',
-    ),
-    CropsItem(
-      category: 'Farmers',
-      question: 'What kind of crops are in high demand?',
-      answer:
-          'Fruits like mangoes and apples, vegetables like tomatoes and potatoes, and exotic vegetables like lettuce are often in high demand across markets.',
-    ),
-    CropsItem(
-      category: 'Farmers',
-      question: 'Can I connect with buyers directly?',
-      answer:
-          'Yes, our platform facilitates communication between buyers and farmers through a secure messaging feature for any queries or custom orders.',
-    ),
-  ];
+  late final List<CropsItem> faqItems;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final local = AppLocalizations.of(context)!;
+    faqItems = [
+      CropsItem(
+        category: 'Buyers',
+        question: local.cropsFaqQ1,
+        answer: local.cropsFaqA1,
+      ),
+      CropsItem(
+        category: 'Buyers',
+        question: local.cropsFaqQ2,
+        answer: local.cropsFaqA2,
+      ),
+      CropsItem(
+        category: 'Buyers',
+        question: local.cropsFaqQ3,
+        answer: local.cropsFaqA3,
+      ),
+      CropsItem(
+        category: 'Buyers',
+        question: local.cropsFaqQ4,
+        answer: local.cropsFaqA4,
+      ),
+      CropsItem(
+        category: 'Buyers',
+        question: local.cropsFaqQ5,
+        answer: local.cropsFaqA5,
+      ),
+      CropsItem(
+        category: 'Farmers',
+        question: local.cropsFaqQ6,
+        answer: local.cropsFaqA6,
+      ),
+      CropsItem(
+        category: 'Farmers',
+        question: local.cropsFaqQ7,
+        answer: local.cropsFaqA7,
+      ),
+      CropsItem(
+        category: 'Farmers',
+        question: local.cropsFaqQ8,
+        answer: local.cropsFaqA8,
+      ),
+      CropsItem(
+        category: 'Farmers',
+        question: local.cropsFaqQ9,
+        answer: local.cropsFaqA9,
+      ),
+      CropsItem(
+        category: 'Farmers',
+        question: local.cropsFaqQ10,
+        answer: local.cropsFaqA10,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            vertical: 70, // 50% of screen height
-            horizontal: 20, // 100% of screen width
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 70, horizontal: 20),
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -2446,16 +2926,16 @@ class _CropsViewScreenState extends State<CropsViewScreen> {
             ),
             child: Column(
               children: [
-                const Text(
-                  'Buyer and Farmer FAQs',
-                  style: TextStyle(
+                Text(
+                  local.cropsFaqTitle,
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
                   ),
                 ),
                 const SizedBox(height: 20),
-                ..._buildFAQSections(),
+                ..._buildFAQSections(local),
               ],
             ),
           ),
@@ -2464,7 +2944,7 @@ class _CropsViewScreenState extends State<CropsViewScreen> {
     );
   }
 
-  List<Widget> _buildFAQSections() {
+  List<Widget> _buildFAQSections(AppLocalizations local) {
     final buyerFAQs = faqItems
         .where((item) => item.category == 'Buyers')
         .toList();
@@ -2473,9 +2953,9 @@ class _CropsViewScreenState extends State<CropsViewScreen> {
         .toList();
 
     return [
-      _buildCategorySection('FAQs for Buyers', buyerFAQs),
+      _buildCategorySection(local.faqsForBuyers, buyerFAQs),
       const SizedBox(height: 20),
-      _buildCategorySection('FAQs for Farmers', farmerFAQs),
+      _buildCategorySection(local.faqsForFarmers, farmerFAQs),
     ];
   }
 
@@ -2528,18 +3008,6 @@ class _CropsViewScreenState extends State<CropsViewScreen> {
   }
 }
 
-class CropsItem {
-  final String category;
-  final String question;
-  final String answer;
-
-  CropsItem({
-    required this.category,
-    required this.question,
-    required this.answer,
-  });
-}
-
 class ProduceFAQScreen extends StatefulWidget {
   const ProduceFAQScreen({super.key});
 
@@ -2548,55 +3016,31 @@ class ProduceFAQScreen extends StatefulWidget {
 }
 
 class _ProduceFAQScreenState extends State<ProduceFAQScreen> {
-  final List<Map<String, String>> faqData = [
-    {
-      'question': 'What is the best tractor for small-scale farming?',
-      'answer':
-          'Compact tractors like the John Deere 1025R or Kubota BX Series are great options.',
-    },
-    {
-      'question': 'How do I maintain my agricultural tools?',
-      'answer':
-          'Clean tools after every use, store them in a dry place, and regularly oil moving parts to prevent rust.',
-    },
-    {
-      'question': 'What is the lifespan of a plowing blade?',
-      'answer':
-          'A plowing blade typically lasts 3-5 years, depending on soil conditions and usage.',
-    },
-    {
-      'question': 'Can I use the same equipment for different crops?',
-      'answer':
-          'Yes, many tools are versatile, but ensure they are properly adjusted to suit the crop requirements.',
-    },
-    {
-      'question':
-          'What safety precautions should I take when using power tools?',
-      'answer':
-          'Always wear protective gear, follow manufacturer instructions, and inspect tools for damage before use.',
-    },
-    {
-      'question': 'How often should I service my tractor?',
-      'answer':
-          'Tractors should be serviced every 200-250 hours of use or annually, whichever comes first.',
-    },
-    {
-      'question': 'What is the best way to sharpen a sickle or scythe?',
-      'answer':
-          'Use a sharpening stone or file, maintaining a consistent angle, and hone the edge regularly during use.',
-    },
-    {
-      'question': 'Are electric tools better than manual ones for gardening?',
-      'answer':
-          'Electric tools are more efficient for larger tasks, while manual tools offer more precision and control for delicate work.',
-    },
-  ];
-
+  late final List<Map<String, String>> faqData;
   String searchQuery = '';
   final ScrollController _scrollController = ScrollController();
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final local = AppLocalizations.of(context)!;
+
+    faqData = [
+      {'question': local.faqQ1, 'answer': local.faqA1},
+      {'question': local.faqQ2, 'answer': local.faqA2},
+      {'question': local.faqQ3, 'answer': local.faqA3},
+      {'question': local.faqQ4, 'answer': local.faqA4},
+      {'question': local.faqQ5, 'answer': local.faqA5},
+      {'question': local.faqQ6, 'answer': local.faqA6},
+      {'question': local.faqQ7, 'answer': local.faqA7},
+      {'question': local.faqQ8, 'answer': local.faqA8},
+    ];
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
     final filteredData = faqData.where((faq) {
       final query = searchQuery.trim().toLowerCase();
       final question = faq['question']!.toLowerCase();
@@ -2614,27 +3058,21 @@ class _ProduceFAQScreenState extends State<ProduceFAQScreen> {
           children: [
             Image.asset('assets/logo.png.jpg', width: 35),
             const SizedBox(width: 8),
-            const Text('Kisan Connect'),
+            Text(local.appTitle),
           ],
         ),
         actions: [
           PopupMenuButton<int>(
             icon: const Icon(Icons.more_vert, color: Colors.amber),
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 1, child: Text('About Us')),
-              const PopupMenuItem(value: 2, child: Text('Contact Us')),
+              PopupMenuItem(value: 1, child: Text(local.aboutUs)),
+              PopupMenuItem(value: 2, child: Text(local.contactUs)),
             ],
             onSelected: (value) {
               if (value == 1) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => AboutUsPage()),
-                );
+                Navigator.pushNamed(context, '/about');
               } else if (value == 2) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => ContactUsPage()),
-                );
+                Navigator.pushNamed(context, '/contact');
               }
             },
           ),
@@ -2648,7 +3086,7 @@ class _ProduceFAQScreenState extends State<ProduceFAQScreen> {
         children: [
           Center(
             child: Text(
-              "Fresh Produce FAQ's",
+              local.produceFaqTitle,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.greenAccent,
@@ -2666,7 +3104,7 @@ class _ProduceFAQScreenState extends State<ProduceFAQScreen> {
               );
             },
             decoration: InputDecoration(
-              hintText: 'Search FAQs...',
+              hintText: local.searchFaqHint,
               filled: true,
               fillColor: Colors.white10,
               prefixIcon: const Icon(Icons.search, color: Colors.white54),
@@ -2684,8 +3122,8 @@ class _ProduceFAQScreenState extends State<ProduceFAQScreen> {
               padding: const EdgeInsets.all(24.0),
               child: Center(
                 child: Text(
-                  "No FAQs found for your search.",
-                  style: TextStyle(color: Colors.redAccent, fontSize: 16),
+                  local.noFaqsFound,
+                  style: const TextStyle(color: Colors.redAccent, fontSize: 16),
                 ),
               ),
             ),
@@ -2698,47 +3136,41 @@ class _ProduceFAQScreenState extends State<ProduceFAQScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  dividerColor: Colors.transparent,
-                  splashColor: Colors.transparent,
+              child: ExpansionTile(
+                collapsedBackgroundColor: Colors.green,
+                backgroundColor: Colors.green.shade700,
+                collapsedTextColor: Colors.white,
+                textColor: Colors.white,
+                iconColor: Colors.white,
+                title: Text(
+                  '${index + 1}. ${faq['question']}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                child: ExpansionTile(
-                  collapsedBackgroundColor: Colors.green,
-                  backgroundColor: Colors.green.shade700,
-                  collapsedTextColor: Colors.white,
-                  textColor: Colors.white,
-                  iconColor: Colors.white,
-                  title: Text(
-                    '${index + 1}. ${faq['question']}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(
-                          bottom: Radius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        faq['answer']!,
-                        style: const TextStyle(color: Colors.black),
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(12),
                       ),
                     ),
-                  ],
-                ),
+                    child: Text(
+                      faq['answer']!,
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  ),
+                ],
               ),
             );
           }),
           const SizedBox(height: 30),
-          Divider(color: Colors.white24),
+          const Divider(color: Colors.white24),
           Center(
             child: Text(
-              "© 2025 Kisan Connect. All rights reserved.",
-              style: TextStyle(color: Colors.white54),
+              local.footerCopyright,
+              style: const TextStyle(color: Colors.white54),
             ),
           ),
         ],
@@ -2748,85 +3180,47 @@ class _ProduceFAQScreenState extends State<ProduceFAQScreen> {
 }
 
 class BuyerDashboardPage extends StatelessWidget {
-  final List<Map<String, dynamic>> dashboardItems = [
-    {"icon": Icons.apple, "title": "Organic Fruits"},
-    {"icon": Icons.car_rental, "title": "Fresh Vegetables"},
-    {"icon": Icons.local_drink, "title": "Dairy Products"},
-    {"icon": Icons.egg, "title": "Poultry Products"},
-    {"icon": Icons.local_fire_department, "title": "Exotic Vegetables"},
-  ];
-
-  final List<Map<String, String>> testimonials = [
-    {
-      "quote":
-          "Kisan Connect has transformed my shopping experience. The quality of produce is exceptional!",
-      "author": "— Prabhas, Buyer",
-    },
-    {
-      "quote":
-          "I love the convenience of ordering fresh fruits and vegetables online. Highly recommend!",
-      "author": "— Krishna Babu, Customer",
-    },
-    {
-      "quote":
-          "The support from Kisan Connect has been invaluable. They truly care about customers!",
-      "author": "— Jason Desabathula, Buyer",
-    },
-  ];
+  const BuyerDashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 600;
+
+    final List<Map<String, dynamic>> dashboardItems = [
+      {"icon": Icons.apple, "title": local.itemOrganicFruits},
+      {"icon": Icons.car_rental, "title": local.itemFreshVegetables},
+      {"icon": Icons.local_drink, "title": local.itemDairyProducts},
+      {"icon": Icons.egg, "title": local.itemPoultryProducts},
+      {
+        "icon": Icons.local_fire_department,
+        "title": local.itemExoticVegetables,
+      },
+    ];
+
+    final List<Map<String, String>> testimonials = [
+      {"quote": local.testimonial1, "author": local.testimonial1Author},
+      {"quote": local.testimonial2, "author": local.testimonial2Author},
+      {"quote": local.testimonial3, "author": local.testimonial3Author},
+    ];
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF0d091e),
-        title: Row(
-          children: [
-            Image.asset("assets/logo.png.jpg", width: 35),
-            const SizedBox(width: 8),
-            const Text("Kisan Connect"),
-          ],
-        ),
+        title: Row(children: [Text(local.appTitle)]),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => AboutUsPage()),
-              );
-            },
-            child: const Text(
-              "About Us",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => ContractDetailsScreen()),
-              );
-            },
-            child: const Text(
-              "Guidelines",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
           TextButton.icon(
             onPressed: () {},
             icon: const Icon(Icons.person, color: Colors.white),
-            label: const Text(
-              "My Profile",
-              style: TextStyle(color: Colors.white),
-            ),
+            label: SizedBox.shrink(),
           ),
         ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 50),
@@ -2838,19 +3232,26 @@ class BuyerDashboardPage extends StatelessWidget {
                 ),
               ),
               child: Column(
-                children: const [
-                  Text(
-                    "Welcome to Kisan Connect",
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                children: [
+                  Center(
+                    child: Text(
+                      local.welcomeTitle,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
-                    "Empowering Buyers with Quality Produce",
-                    style: TextStyle(fontSize: 18),
+                    local.welcomeSubtitle,
+                    style: const TextStyle(fontSize: 18),
                   ),
                 ],
               ),
             ),
+
+            // Search bar
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
               child: Row(
@@ -2858,7 +3259,7 @@ class BuyerDashboardPage extends StatelessWidget {
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
-                        hintText: 'Search for anything...',
+                        hintText: local.searchAnything,
                         filled: true,
                         fillColor: Colors.grey.shade300,
                         prefixIcon: const Icon(Icons.search),
@@ -2872,13 +3273,18 @@ class BuyerDashboardPage extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Dashboard
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Column(
                 children: [
-                  const Text(
-                    "Buyer Dashboard",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  Text(
+                    local.buyerDashboard,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Wrap(
@@ -2891,35 +3297,39 @@ class BuyerDashboardPage extends StatelessWidget {
                         height: 150,
                         child: GestureDetector(
                           onTap: () {
-                            if (item['title'] == 'Organic Fruits') {
+                            if (item['title'] == local.itemOrganicFruits) {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => OrganicFruitMarketplace(),
                                 ),
                               );
-                            } else if (item['title'] == 'Fresh Vegetables') {
+                            } else if (item['title'] ==
+                                local.itemFreshVegetables) {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => FreshVegetablesMarketplace(),
                                 ),
                               );
-                            } else if (item['title'] == 'Dairy Products') {
+                            } else if (item['title'] ==
+                                local.itemDairyProducts) {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => OrganicDairyMarketplace(),
                                 ),
                               );
-                            } else if (item['title'] == 'Poultry Products') {
+                            } else if (item['title'] ==
+                                local.itemPoultryProducts) {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => PoultryMarketplace(),
                                 ),
                               );
-                            } else if (item['title'] == 'Exotic Vegetables') {
+                            } else if (item['title'] ==
+                                local.itemExoticVegetables) {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -2969,14 +3379,19 @@ class BuyerDashboardPage extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Testimonials
             Container(
               color: const Color(0xFF2c2c2c),
               padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
               child: Column(
                 children: [
-                  const Text(
-                    "Testimonials",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  Text(
+                    local.testimonialTitle,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   ...testimonials.map(
@@ -3002,20 +3417,16 @@ class BuyerDashboardPage extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Footer
             Container(
               color: const Color(0xFF0d091e),
               padding: const EdgeInsets.all(16),
               child: Column(
-                children: const [
-                  Text(
-                    "© 2025 Kisan Connect. All rights reserved.",
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    "Customer Support: 1800 267 0997 | Email: customercare@kisanconnect.in",
-                    textAlign: TextAlign.center,
-                  ),
+                children: [
+                  Text(local.footerCopyright, textAlign: TextAlign.center),
+                  const SizedBox(height: 5),
+                  Text(local.footerSupport, textAlign: TextAlign.center),
                 ],
               ),
             ),
@@ -3072,14 +3483,21 @@ class OrganicFruitMarketplace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
 
+    final String pageTitle = local.organicFruitMarketplace;
+    final String subtitle = local.organicFruitSubtitle;
+    final String searchHint = local.searchFruitsHint;
+    final String varietyLabel = local.variety;
+    final String seasonLabel = local.season;
+
     return Scaffold(
-      backgroundColor: Color(0xFF141414),
+      backgroundColor: const Color(0xFF141414),
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text('Organic Fruit Marketplace'),
+        title: Text(pageTitle),
         centerTitle: true,
       ),
       body: ListView(
@@ -3087,29 +3505,31 @@ class OrganicFruitMarketplace extends StatelessWidget {
         children: [
           Center(
             child: Column(
-              children: const [
-                SizedBox(height: 20),
+              children: [
+                const SizedBox(height: 20),
                 Text(
-                  'Connect directly with farmers for fresh, organic fruits',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  subtitle,
+                  style: const TextStyle(color: Colors.grey, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
               ],
             ),
           ),
-          // Search Bar
           Row(
             children: [
               Expanded(
                 child: TextField(
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Color(0xFF1a1a1a),
-                    hintText: 'Search for fruits...',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.search, color: Colors.greenAccent),
+                    fillColor: const Color(0xFF1a1a1a),
+                    hintText: searchHint,
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Colors.greenAccent,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30),
                       borderSide: BorderSide.none,
@@ -3120,17 +3540,19 @@ class OrganicFruitMarketplace extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 30),
-          // Fruit Grid
           Wrap(
             spacing: 16,
             runSpacing: 16,
             children: fruits.map((fruit) {
+              final String farmersAvailable = local.farmersAvailable(
+                fruit['farmers'].length,
+              );
               return GestureDetector(
                 onTap: () => showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
-                  backgroundColor: Color(0xFF1a1a1a),
-                  shape: RoundedRectangleBorder(
+                  backgroundColor: const Color(0xFF1a1a1a),
+                  shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(20),
                     ),
@@ -3140,9 +3562,9 @@ class OrganicFruitMarketplace extends StatelessWidget {
                 child: Container(
                   width: isMobile ? width * 0.9 : width * 0.42,
                   decoration: BoxDecoration(
-                    color: Color(0xFF1a1a1a),
+                    color: const Color(0xFF1a1a1a),
                     borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black45,
                         blurRadius: 10,
@@ -3154,7 +3576,7 @@ class OrganicFruitMarketplace extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.vertical(
+                        borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(15),
                         ),
                         child: Image.asset(
@@ -3171,24 +3593,24 @@ class OrganicFruitMarketplace extends StatelessWidget {
                           children: [
                             Text(
                               fruit['name'],
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.greenAccent,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
-                              "Variety: ${fruit['variety']}",
-                              style: TextStyle(color: Colors.grey),
+                              '$varietyLabel: ${fruit['variety']}',
+                              style: const TextStyle(color: Colors.grey),
                             ),
                             Text(
-                              "Season: ${fruit['season']}",
-                              style: TextStyle(color: Colors.grey),
+                              '$seasonLabel: ${fruit['season']}',
+                              style: const TextStyle(color: Colors.grey),
                             ),
-                            SizedBox(height: 5),
+                            const SizedBox(height: 5),
                             Text(
-                              "${fruit['farmers'].length} Farmers Available",
-                              style: TextStyle(color: Colors.green),
+                              '${fruit['farmers'].length} $farmersAvailable',
+                              style: const TextStyle(color: Colors.green),
                             ),
                           ],
                         ),
@@ -3630,14 +4052,21 @@ class FreshVegetablesMarketplace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
 
+    // Localized strings
+    final String title = local.freshVegetablesMarketplace;
+    final String subtitle = local.freshVegetablesSubtitle;
+    final String searchHint = local.searchVegetablesHint;
+    final String varietyLabel = local.variety;
+    final String seasonLabel = local.season;
     return Scaffold(
       backgroundColor: const Color(0xFF141414),
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text('Fresh Vegetables Marketplace'),
+        title: Text(title),
         centerTitle: true,
       ),
       body: ListView(
@@ -3646,9 +4075,9 @@ class FreshVegetablesMarketplace extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                const Text(
-                  'Connect directly with farmers for fresh, organic vegetables',
-                  style: TextStyle(color: Colors.grey),
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -3656,13 +4085,13 @@ class FreshVegetablesMarketplace extends StatelessWidget {
                   children: [
                     Expanded(
                       child: TextField(
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: Color(0xFF1a1a1a),
-                          hintText: 'Search for vegetables...',
-                          hintStyle: TextStyle(color: Colors.grey),
-                          prefixIcon: Icon(
+                          fillColor: const Color(0xFF1a1a1a),
+                          hintText: searchHint,
+                          hintStyle: const TextStyle(color: Colors.grey),
+                          prefixIcon: const Icon(
                             Icons.search,
                             color: Colors.greenAccent,
                           ),
@@ -3680,6 +4109,9 @@ class FreshVegetablesMarketplace extends StatelessWidget {
                   spacing: 16,
                   runSpacing: 16,
                   children: vegetables.map((veg) {
+                    final String farmersAvailable = local.farmersAvailable(
+                      veg['farmers'].length,
+                    );
                     return GestureDetector(
                       onTap: () => showModalBottomSheet(
                         context: context,
@@ -3733,16 +4165,16 @@ class FreshVegetablesMarketplace extends StatelessWidget {
                                     ),
                                   ),
                                   Text(
-                                    "Variety: ${veg['variety']}",
+                                    '$varietyLabel: ${veg['variety']}',
                                     style: const TextStyle(color: Colors.grey),
                                   ),
                                   Text(
-                                    "Season: ${veg['season']}",
+                                    '$seasonLabel: ${veg['season']}',
                                     style: const TextStyle(color: Colors.grey),
                                   ),
                                   const SizedBox(height: 5),
                                   Text(
-                                    "${veg['farmers'].length} Farmers Available",
+                                    '${veg['farmers'].length} $farmersAvailable',
                                     style: const TextStyle(color: Colors.green),
                                   ),
                                 ],
@@ -3755,6 +4187,636 @@ class FreshVegetablesMarketplace extends StatelessWidget {
                   }).toList(),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class OrganicDairyMarketplace extends StatelessWidget {
+  final List<Map<String, dynamic>> dairyItems = [
+    {
+      'id': 1,
+      'name': 'Milk',
+      'variety': 'Full Cream',
+      'season': 'Year-round',
+      'description':
+          'Fresh, full cream milk from organic cows, rich in nutrients.',
+      'image': 'assets/milk.jpg',
+      'farmers': [
+        {
+          'name': 'Rajesh Kumar',
+          'location': 'Nasik, Maharashtra',
+          'quantity': '1000 liters available',
+          'rating': 4.8,
+        },
+        {
+          'name': 'Suresh Patel',
+          'location': 'Valsad, Gujarat',
+          'quantity': '800 liters available',
+          'rating': 4.6,
+        },
+      ],
+    },
+    {
+      'id': 2,
+      'name': 'Paneer',
+      'variety': 'Freshly made',
+      'season': 'Year-round',
+      'description': 'Fresh and soft paneer, perfect for cooking and snacks.',
+      'image': 'assets/paneer.jpg',
+      'farmers': [
+        {
+          'name': 'Vikram Singh',
+          'location': 'Kinnaur, Himachal Pradesh',
+          'quantity': '500 kg available',
+          'rating': 4.9,
+        },
+      ],
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF141414),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0d091e),
+        title: Text(local.dairyMarketplaceTitle),
+        centerTitle: true,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text(
+            local.dairyMarketplaceSubtitle,
+            style: const TextStyle(color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: const Color(0xFF1a1a1a),
+                    hintText: local.searchDairyHint,
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Colors.greenAccent,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: dairyItems.map((item) {
+              return GestureDetector(
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: const Color(0xFF1a1a1a),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  builder: (_) => DairyDetailSheet(dairy: item),
+                ),
+                child: Container(
+                  width: isMobile ? width * 0.9 : width * 0.42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1a1a1a),
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black45,
+                        blurRadius: 10,
+                        offset: Offset(2, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(15),
+                        ),
+                        child: Image.asset(
+                          item['image'],
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['name'],
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.greenAccent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              "${local.varietyLabel}: ${item['variety']}",
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            Text(
+                              "${local.seasonLabel}: ${item['season']}",
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              local.farmersAvailable(item['farmers'].length),
+                              style: const TextStyle(color: Colors.green),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DairyDetailSheet extends StatelessWidget {
+  final Map<String, dynamic> dairy;
+
+  const DairyDetailSheet({required this.dairy});
+
+  @override
+  Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.asset(
+              dairy['image'],
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            dairy['name'],
+            style: const TextStyle(
+              fontSize: 24,
+              color: Colors.greenAccent,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "${local.varietyLabel}: ${dairy['variety']}",
+            style: const TextStyle(color: Colors.white70),
+          ),
+          Text(
+            "${local.seasonLabel}: ${dairy['season']}",
+            style: const TextStyle(color: Colors.white70),
+          ),
+          Text(
+            "${local.descriptionLabel}: ${dairy['description']}",
+            style: const TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            local.availableFarmers,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...dairy['farmers'].map<Widget>(
+            (farmer) => Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1a1a1a),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade700),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    farmer['name'],
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.greenAccent,
+                    ),
+                  ),
+                  Text(
+                    "${local.locationLabel}: ${farmer['location']}",
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  Text(
+                    "${local.quantityLabel}: ${farmer['quantity']}",
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        "${local.ratingLabel}: ",
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      Row(
+                        children: List.generate(
+                          (farmer['rating']).round(),
+                          (index) => const Icon(
+                            Icons.star,
+                            color: Colors.amber,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        "${farmer['rating']}",
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.greenAccent,
+                        ),
+                        child: Text(
+                          local.chatButton,
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => MakeDealPopup()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                        ),
+                        child: Text(local.makeDealButton),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PoultryMarketplace extends StatelessWidget {
+  final List<Map<String, dynamic>> poultryItems = [
+    {
+      'id': 1,
+      'name': 'Chicken Meat',
+      'variety': 'Broiler',
+      'season': 'Available year-round',
+      'image': 'assets/chicken.jpg',
+      'description': 'Fresh broiler chicken meat sourced from certified farms.',
+      'farmers': [
+        {
+          'name': 'Ramesh Gupta',
+          'location': 'Pune, Maharashtra',
+          'quantity': '300 kg available',
+          'rating': 4.7,
+        },
+        {
+          'name': 'Anita Sharma',
+          'location': 'Jaipur, Rajasthan',
+          'quantity': '200 kg available',
+          'rating': 4.8,
+        },
+      ],
+    },
+    {
+      'id': 2,
+      'name': 'Eggs',
+      'variety': 'Organic',
+      'season': 'Available year-round',
+      'image': 'assets/eggs.jpg',
+      'description': 'Organic eggs from free-range hens, rich in nutrients.',
+      'farmers': [
+        {
+          'name': 'Amit Khanna',
+          'location': 'Bangalore, Karnataka',
+          'quantity': '1000 units available',
+          'rating': 4.9,
+        },
+      ],
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 768;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF141414),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0d091e),
+        title: Text(local.poultryMarketplaceTitle),
+        centerTitle: true,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text(
+            local.poultryMarketplaceSubtitle,
+            style: const TextStyle(color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: const Color(0xFF1a1a1a),
+                    hintText: local.searchPoultryHint,
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Colors.greenAccent,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: poultryItems.map((item) {
+              return GestureDetector(
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: const Color(0xFF1a1a1a),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  builder: (_) => PoultryDetailSheet(poultry: item),
+                ),
+                child: Container(
+                  width: isMobile ? width * 0.9 : width * 0.42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1a1a1a),
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black45,
+                        blurRadius: 10,
+                        offset: Offset(2, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(15),
+                        ),
+                        child: Image.asset(
+                          item['image'],
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['name'],
+                              style: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.greenAccent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              "${local.varietyLabel}: ${item['variety']}",
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            Text(
+                              "${local.seasonLabel}: ${item['season']}",
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              local.farmersAvailable(item['farmers'].length),
+                              style: const TextStyle(color: Colors.green),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PoultryDetailSheet extends StatelessWidget {
+  final Map<String, dynamic> poultry;
+
+  const PoultryDetailSheet({required this.poultry});
+
+  @override
+  Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.asset(
+              poultry['image'],
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            poultry['name'],
+            style: const TextStyle(
+              fontSize: 24,
+              color: Colors.greenAccent,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "${local.varietyLabel}: ${poultry['variety']}",
+            style: const TextStyle(color: Colors.white70),
+          ),
+          Text(
+            "${local.seasonLabel}: ${poultry['season']}",
+            style: const TextStyle(color: Colors.white70),
+          ),
+          Text(
+            "${local.descriptionLabel}: ${poultry['description']}",
+            style: const TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            local.availableFarmers,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...poultry['farmers'].map<Widget>(
+            (farmer) => Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1a1a1a),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade700),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    farmer['name'],
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.greenAccent,
+                    ),
+                  ),
+                  Text(
+                    "${local.locationLabel}: ${farmer['location']}",
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  Text(
+                    "${local.quantityLabel}: ${farmer['quantity']}",
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        "${local.ratingLabel}: ",
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      Row(
+                        children: List.generate(
+                          (farmer['rating']).round(),
+                          (index) => const Icon(
+                            Icons.star,
+                            color: Colors.amber,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        "${farmer['rating']}",
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.greenAccent,
+                        ),
+                        child: Text(
+                          local.chatButton,
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => MakeDealPopup()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                        ),
+                        child: Text(local.makeDealButton),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -3901,607 +4963,6 @@ class VegetableDetailSheet extends StatelessWidget {
   }
 }
 
-class OrganicDairyMarketplace extends StatelessWidget {
-  final List<Map<String, dynamic>> dairyItems = [
-    {
-      'id': 1,
-      'name': 'Milk',
-      'variety': 'Full Cream',
-      'season': 'Year-round',
-      'description':
-          'Fresh, full cream milk from organic cows, rich in nutrients.',
-      'image': 'assets/milk.jpg',
-      'farmers': [
-        {
-          'name': 'Rajesh Kumar',
-          'location': 'Nasik, Maharashtra',
-          'quantity': '1000 liters available',
-          'rating': 4.8,
-        },
-        {
-          'name': 'Suresh Patel',
-          'location': 'Valsad, Gujarat',
-          'quantity': '800 liters available',
-          'rating': 4.6,
-        },
-      ],
-    },
-    {
-      'id': 2,
-      'name': 'Paneer',
-      'variety': 'Freshly made',
-      'season': 'Year-round',
-      'description': 'Fresh and soft paneer, perfect for cooking and snacks.',
-      'image': 'assets/paneer.jpg',
-      'farmers': [
-        {
-          'name': 'Vikram Singh',
-          'location': 'Kinnaur, Himachal Pradesh',
-          'quantity': '500 kg available',
-          'rating': 4.9,
-        },
-      ],
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < 768;
-
-    return Scaffold(
-      backgroundColor: Color(0xFF141414),
-      appBar: AppBar(
-        backgroundColor: Color(0xFF0d091e),
-        title: const Text('Dairy Products'),
-        centerTitle: true,
-      ),
-      body: ListView(
-        padding: EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Connect directly with farmers for fresh, organic dairy products',
-            style: TextStyle(color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Color(0xFF1a1a1a),
-                    hintText: 'Search for dairy products...',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.search, color: Colors.greenAccent),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: dairyItems.map((item) {
-              return GestureDetector(
-                onTap: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Color(0xFF1a1a1a),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                  ),
-                  builder: (_) => DairyDetailSheet(dairy: item),
-                ),
-                child: Container(
-                  width: isMobile ? width * 0.9 : width * 0.42,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1a1a1a),
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black45,
-                        blurRadius: 10,
-                        offset: Offset(2, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(15),
-                        ),
-                        child: Image.asset(
-                          item['image'],
-                          height: 180,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item['name'],
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.greenAccent,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              "Variety: ${item['variety']}",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                            Text(
-                              "Season: ${item['season']}",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "${item['farmers'].length} Farmers Available",
-                              style: TextStyle(color: Colors.green),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class DairyDetailSheet extends StatelessWidget {
-  final Map<String, dynamic> dairy;
-
-  const DairyDetailSheet({required this.dairy});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              dairy['image'],
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            dairy['name'],
-            style: TextStyle(
-              fontSize: 24,
-              color: Colors.greenAccent,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Variety: ${dairy['variety']}",
-            style: TextStyle(color: Colors.white70),
-          ),
-          Text(
-            "Season: ${dairy['season']}",
-            style: TextStyle(color: Colors.white70),
-          ),
-          Text(
-            "Description: ${dairy['description']}",
-            style: TextStyle(color: Colors.white70),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            "Available Farmers",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          ...dairy['farmers'].map<Widget>(
-            (farmer) => Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color(0xFF1a1a1a),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.shade700),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    farmer['name'],
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.greenAccent,
-                    ),
-                  ),
-                  Text(
-                    "Location: ${farmer['location']}",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                  Text(
-                    "Quantity: ${farmer['quantity']}",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                  Row(
-                    children: [
-                      Text("Rating: ", style: TextStyle(color: Colors.white70)),
-                      Row(
-                        children: List.generate(
-                          (farmer['rating']).round(),
-                          (index) =>
-                              Icon(Icons.star, color: Colors.amber, size: 16),
-                        ),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        "${farmer['rating']}",
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.greenAccent,
-                        ),
-                        child: Text(
-                          "Chat",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => MakeDealPopup()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                        ),
-                        child: Text("Make a Deal"),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class PoultryMarketplace extends StatelessWidget {
-  final List<Map<String, dynamic>> poultryItems = [
-    {
-      'id': 1,
-      'name': 'Chicken Meat',
-      'variety': 'Broiler',
-      'season': 'Available year-round',
-      'image': 'assets/chicken.jpg',
-      'description': 'Fresh broiler chicken meat sourced from certified farms.',
-      'farmers': [
-        {
-          'name': 'Ramesh Gupta',
-          'location': 'Pune, Maharashtra',
-          'quantity': '300 kg available',
-          'rating': 4.7,
-        },
-        {
-          'name': 'Anita Sharma',
-          'location': 'Jaipur, Rajasthan',
-          'quantity': '200 kg available',
-          'rating': 4.8,
-        },
-      ],
-    },
-    {
-      'id': 2,
-      'name': 'Eggs',
-      'variety': 'Organic',
-      'season': 'Available year-round',
-      'image': 'assets/eggs.jpg',
-      'description': 'Organic eggs from free-range hens, rich in nutrients.',
-      'farmers': [
-        {
-          'name': 'Amit Khanna',
-          'location': 'Bangalore, Karnataka',
-          'quantity': '1000 units available',
-          'rating': 4.9,
-        },
-      ],
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final isMobile = width < 768;
-
-    return Scaffold(
-      backgroundColor: Color(0xFF141414),
-      appBar: AppBar(
-        backgroundColor: Color(0xFF0d091e),
-        title: const Text('Poultry Marketplace'),
-        centerTitle: true,
-      ),
-      body: ListView(
-        padding: EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Connect directly with farmers for fresh, organic poultry products',
-            style: TextStyle(color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Color(0xFF1a1a1a),
-                    hintText: 'Search for poultry products...',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.search, color: Colors.greenAccent),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: poultryItems.map((item) {
-              return GestureDetector(
-                onTap: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Color(0xFF1a1a1a),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                  ),
-                  builder: (_) => PoultryDetailSheet(poultry: item),
-                ),
-                child: Container(
-                  width: isMobile ? width * 0.9 : width * 0.42,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1a1a1a),
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black45,
-                        blurRadius: 10,
-                        offset: Offset(2, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(15),
-                        ),
-                        child: Image.asset(
-                          item['image'],
-                          height: 180,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item['name'],
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.greenAccent,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              "Variety: ${item['variety']}",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                            Text(
-                              "Season: ${item['season']}",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "${item['farmers'].length} Farmers Available",
-                              style: TextStyle(color: Colors.green),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class PoultryDetailSheet extends StatelessWidget {
-  final Map<String, dynamic> poultry;
-
-  const PoultryDetailSheet({required this.poultry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              poultry['image'],
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            poultry['name'],
-            style: TextStyle(
-              fontSize: 24,
-              color: Colors.greenAccent,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Variety: ${poultry['variety']}",
-            style: TextStyle(color: Colors.white70),
-          ),
-          Text(
-            "Season: ${poultry['season']}",
-            style: TextStyle(color: Colors.white70),
-          ),
-          Text(
-            "Description: ${poultry['description']}",
-            style: TextStyle(color: Colors.white70),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            "Available Farmers",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          ...poultry['farmers'].map<Widget>(
-            (farmer) => Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color(0xFF1a1a1a),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.shade700),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    farmer['name'],
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.greenAccent,
-                    ),
-                  ),
-                  Text(
-                    "Location: ${farmer['location']}",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                  Text(
-                    "Quantity: ${farmer['quantity']}",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                  Row(
-                    children: [
-                      Text("Rating: ", style: TextStyle(color: Colors.white70)),
-                      Row(
-                        children: List.generate(
-                          (farmer['rating']).round(),
-                          (index) =>
-                              Icon(Icons.star, color: Colors.amber, size: 16),
-                        ),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        "${farmer['rating']}",
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.greenAccent,
-                        ),
-                        child: Text(
-                          "Chat",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => MakeDealPopup()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                        ),
-                        child: Text("Make a Deal"),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class ExoticVegetablesMarketplace extends StatelessWidget {
   final List<Map<String, dynamic>> vegetablesData = [
     {
@@ -4533,7 +4994,7 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
       'variety': 'Pascal',
       'season': 'March-June',
       'image':
-          'https://media.npr.org/assets/img/2016/06/13/celery_custom-8f0a770aa8a6091316802b63fb7a0f8e9edcc6ec.jpg',
+          'https://agricultureguruji.com/wp-content/uploads/2018/08/vegetables-673181_1280.jpg',
       'description':
           'Pascal celery known for its crisp, flavorful stalks and high-quality yield.',
       'farmers': [
@@ -4549,27 +5010,24 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       backgroundColor: const Color(0xFF141414),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0d091e),
-        title: const Text('Exotic Vegetables Marketplace'),
+        title: Text(local.exoticVegetablesMarketplaceTitle),
         centerTitle: true,
       ),
       body: ListView(
         children: [
-          const Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Text(
-                  'Connect directly with farmers for fresh, organic exotic vegetables',
-                  style: TextStyle(color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              local.exoticVegetablesMarketplaceSubtitle,
+              style: const TextStyle(color: Colors.grey),
+              textAlign: TextAlign.center,
             ),
           ),
           Padding(
@@ -4578,7 +5036,7 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: const Color(0xFF1a1a1a),
-                hintText: 'Search for exotic vegetables...',
+                hintText: local.searchExoticVegetablesHint,
                 hintStyle: const TextStyle(color: Colors.grey),
                 prefixIcon: const Icon(Icons.search, color: Colors.greenAccent),
                 border: OutlineInputBorder(
@@ -4594,7 +5052,7 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
             spacing: 16,
             runSpacing: 16,
             children: vegetablesData
-                .map((veg) => _vegetableCard(context, veg, isMobile))
+                .map((veg) => _vegetableCard(context, veg, isMobile, local))
                 .toList(),
           ),
         ],
@@ -4606,6 +5064,7 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
     BuildContext context,
     Map<String, dynamic> veg,
     bool isMobile,
+    AppLocalizations local,
   ) {
     return GestureDetector(
       onTap: () => showModalBottomSheet(
@@ -4615,7 +5074,7 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        builder: (_) => _vegetableDetailSheet(veg, context),
+        builder: (_) => _vegetableDetailSheet(veg, context, local),
       ),
       child: Container(
         width: isMobile ? MediaQuery.of(context).size.width * 0.9 : 350,
@@ -4658,16 +5117,16 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "Variety: ${veg['variety']}",
+                    "${local.varietyLabel}: ${veg['variety']}",
                     style: const TextStyle(color: Colors.grey),
                   ),
                   Text(
-                    "Season: ${veg['season']}",
+                    "${local.seasonLabel}: ${veg['season']}",
                     style: const TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    "${veg['farmers'].length} Farmers Available",
+                    local.farmersAvailable(veg['farmers'].length),
                     style: const TextStyle(color: Colors.green),
                   ),
                 ],
@@ -4679,7 +5138,11 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
     );
   }
 
-  Widget _vegetableDetailSheet(Map<String, dynamic> veg, BuildContext context) {
+  Widget _vegetableDetailSheet(
+    Map<String, dynamic> veg,
+    BuildContext context,
+    AppLocalizations local,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -4706,32 +5169,39 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            "Variety: ${veg['variety']}",
+            "${local.varietyLabel}: ${veg['variety']}",
             style: const TextStyle(color: Colors.white70),
           ),
           Text(
-            "Season: ${veg['season']}",
+            "${local.seasonLabel}: ${veg['season']}",
             style: const TextStyle(color: Colors.white70),
           ),
           Text(
-            "Description: ${veg['description']}",
+            "${local.descriptionLabel}: ${veg['description']}",
             style: const TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 20),
-          const Text(
-            "Available Farmers",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          Text(
+            local.availableFarmers,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 10),
           ...veg['farmers']
-              .map<Widget>((farmer) => _farmerCard(context, farmer))
+              .map<Widget>((farmer) => _farmerCard(context, farmer, local))
               .toList(),
         ],
       ),
     );
   }
 
-  Widget _farmerCard(BuildContext context, Map<String, dynamic> farmer) {
+  Widget _farmerCard(
+    BuildContext context,
+    Map<String, dynamic> farmer,
+    AppLocalizations local,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -4751,16 +5221,19 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
             ),
           ),
           Text(
-            "Location: ${farmer['location']}",
+            "${local.locationLabel}: ${farmer['location']}",
             style: const TextStyle(color: Colors.white70),
           ),
           Text(
-            "Quantity: ${farmer['quantity']}",
+            "${local.quantityLabel}: ${farmer['quantity']}",
             style: const TextStyle(color: Colors.white70),
           ),
           Row(
             children: [
-              const Text("Rating: ", style: TextStyle(color: Colors.white70)),
+              Text(
+                "${local.ratingLabel}: ",
+                style: const TextStyle(color: Colors.white70),
+              ),
               Row(
                 children: List.generate(
                   (farmer['rating']).round(),
@@ -4783,9 +5256,9 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.greenAccent,
                 ),
-                child: const Text(
-                  "Chat",
-                  style: TextStyle(color: Colors.black),
+                child: Text(
+                  local.chatButton,
+                  style: const TextStyle(color: Colors.black),
                 ),
               ),
               const SizedBox(width: 10),
@@ -4799,7 +5272,7 @@ class ExoticVegetablesMarketplace extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent,
                 ),
-                child: const Text("Make a Deal"),
+                child: Text(local.makeDealButton),
               ),
             ],
           ),
