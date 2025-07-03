@@ -1,0 +1,66 @@
+{
+  "@@locale": "en",
+  "appTitle": "Kisan Connect",
+
+  "searchHint": "Search crops, equipment, produce...",
+
+  "carouselTitle1": "Explore Our Crops",
+  "carouselTitle2": "Top Quality Equipment",
+  "carouselTitle3": "Fresh Produce Delivered",
+
+  "exploreNow": "Explore Now",
+
+  "contractFarmingTitle": "What is Contract Farming?",
+  "contractFarmingDescription": "Contract farming is an agreement between farmers and buyers to produce specific crops at predetermined prices...",
+
+  "exploreCategories": "Explore Categories",
+
+  "categoryCropsTitle": "Crops",
+  "categoryCropsDesc": "Discover a variety of crops.",
+
+  "categoryEquipmentTitle": "Equipment",
+  "categoryEquipmentDesc": "Find the best agricultural tools.",
+
+  "categoryProduceTitle": "Fresh Produce",
+  "categoryProduceDesc": "Order fresh fruits and vegetables.",
+
+  "whatUsersSay": "What Our Users Say",
+
+  "testimonial1": "Kisan Connect has revolutionized my farming experience!",
+  "testimonial1Author": "Ramanaiah, Farmer",
+
+  "testimonial2": "I can easily order fresh produce online. Highly recommend!",
+  "testimonial2Author": "Sanjay, Customer",
+
+  "testimonial3": "The support from Kisan Connect is exceptional!",
+  "testimonial3Author": "Suresh Patel, Farmer",
+
+  "footerCopyright": "© 2025 Kisan Connect. All rights reserved.",
+
+  "drawerProfile": "Profile",
+  "drawerHelp": "Help",
+  "drawerQuery": "Raise Query",
+  "drawerSettings": "Settings",
+
+  "popupLogin": "Log-in",
+  "popupFarmer": "Farmer",
+  "popupBuyer": "Buyer",
+  "popupLogout": "Language",
+  "popupHelp": "Help",
+
+  "logoutSuccess": "Logout succesfully ....",
+  "helpSelected": "Help selected....",
+
+  "voiceAssistantGreeting": "Hi, how can I assist you?",
+  
+  "categoryCropsTitle": "Crops",
+  "categoryCropsDesc": "Discover a variety of crops.",
+
+  "categoryEquipmentTitle": "Equipment",
+  "categoryEquipmentDesc": "Find the best agricultural tools.",
+
+  "categoryProduceTitle": "Fresh Produce",
+  "categoryProduceDesc": "Order fresh fruits and vegetables."
+
+
+}
