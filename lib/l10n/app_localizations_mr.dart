@@ -9,6 +9,9 @@ class AppLocalizationsMr extends AppLocalizations {
   AppLocalizationsMr([String locale = 'mr']) : super(locale);
 
   @override
+  String get govtPolicies => 'शासकीय धोरणे';
+
+  @override
   String get appTitle => 'किसान कनेक्ट';
 
   @override

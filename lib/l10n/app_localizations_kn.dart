@@ -9,6 +9,9 @@ class AppLocalizationsKn extends AppLocalizations {
   AppLocalizationsKn([String locale = 'kn']) : super(locale);
 
   @override
+  String get govtPolicies => 'ಸರ್ಕಾರಿ ನೀತಿಗಳು';
+
+  @override
   String get appTitle => 'ಕಿಸಾನ್ ಕನೆಕ್ಟ್';
 
   @override

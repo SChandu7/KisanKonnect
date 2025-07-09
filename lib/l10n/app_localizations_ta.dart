@@ -9,6 +9,9 @@ class AppLocalizationsTa extends AppLocalizations {
   AppLocalizationsTa([String locale = 'ta']) : super(locale);
 
   @override
+  String get govtPolicies => 'GovtPolicies';
+
+  @override
   String get appTitle => 'கிசான் இணைப்பு';
 
   @override

@@ -63,6 +63,8 @@ dev_dependencies:
   flutter_tts: ^3.6.3  
   intl: ^0.20.2
   flutter_localization: ^0.3.3
+  speech_to_text: ^7.1.0
+  string_similarity: ^2.1.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
