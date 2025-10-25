@@ -194,16 +194,13 @@ flutter run
 ---
 
 ## 📸 Screenshots **
-                                        HomePageView
+HomePageView
 <img width="1391" height="755" alt="image" src="https://github.com/user-attachments/assets/739091d0-093f-4473-8f28-635054a36c4e" />
-                                        Farmer Home Page
+Farmer Home Page
 <img width="1140" height="712" alt="image" src="https://github.com/user-attachments/assets/f0bcfb54-04ca-487b-836c-834cb977406b" />
-                                        Key Feauters
-                                        
+Key Feauters                                      
 ![WhatsApp Image 2025-10-25 at 11 24 23_29820082](https://github.com/user-attachments/assets/5804c213-c796-4c6d-a671-7772a42e1b45)
-
 Buyers Home Page
-
 <img width="1248" height="700" alt="image" src="https://github.com/user-attachments/assets/de09e62f-cbab-4015-9407-45c2ecd4b535" />
 Buying products page
 <img width="1200" height="686" alt="image" src="https://github.com/user-attachments/assets/75579499-7508-40f0-b9b7-5a19e426451d" />
@@ -227,3 +224,4 @@ Buying products page
 
 ## 📄 License
 This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
+
